@@ -10,6 +10,8 @@ ENV SPARK_VERSION=${SPARK_VERSION:-2.2.0} \
 RUN apt-get update \
     && apt-get install -y openjdk-8-jdk
 
+## Building spark
+## http://spark.apache.org/docs/latest/building-spark.html
 RUN wget -q http://d3kbcqa49mib13.cloudfront.net/spark-${SPARK_VERSION}.tgz  \
     && tar xf spark-${SPARK_VERSION}.tgz \
     && cd spark-${SPARK_VERSION} \
