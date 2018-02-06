@@ -9,8 +9,11 @@ ENV SPARK_VERSION=${SPARK_VERSION:-2.2.0} \
 RUN apt-get update \
     && apt-get install -y openjdk-8-jdk
 
-## Building spark
-## http://spark.apache.org/docs/latest/building-spark.html
+## build spark with hive - http://spark.apache.org/docs/latest/building-spark.html
+# install necessary packages for testing SparkR
+RUN R -e "install.packages(c('knitr', 'rmarkdown', 'testthat', 'e1071', 'survival'))"
+
+# make distribution
 RUN wget -q http://d3kbcqa49mib13.cloudfront.net/spark-${SPARK_VERSION}.tgz  \
     && tar xf spark-${SPARK_VERSION}.tgz \
     && cd spark-${SPARK_VERSION} \
