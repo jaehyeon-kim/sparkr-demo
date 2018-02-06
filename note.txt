@@ -1,0 +1,5 @@
+common - Ubuntu 16.04
+common - R with devtools
+common - JDK 8
+common - Spark built with Hive
+master - RStudio
