@@ -4,8 +4,7 @@ MAINTAINER Jaehyeon Kim <dottami@gmail.com>
 ARG SPARK_VERSION
 ENV SPARK_VERSION=${SPARK_VERSION:-2.2.0} \
     # $(readlink -f /usr/bin/javac | sed "s:/bin/javac::")
-    JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
-    MAVEN_OPTS='-Xmx2g -XX:ReservedCodeCacheSize=512m'
+    JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 
 RUN apt-get update \
     && apt-get install -y openjdk-8-jdk
