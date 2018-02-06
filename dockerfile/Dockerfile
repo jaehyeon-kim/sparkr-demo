@@ -15,4 +15,4 @@ RUN apt-get update \
 RUN wget -q http://d3kbcqa49mib13.cloudfront.net/spark-${SPARK_VERSION}.tgz  \
     && tar xf spark-${SPARK_VERSION}.tgz \
     && cd spark-${SPARK_VERSION} \
-    && ./dev/make-distribution.sh --name sparkr-hive-yarn2.6 --pip --r --tgz -Psparkr -Phive-thriftserver -Pyarn -DskipTests clean package
+    && ./dev/make-distribution.sh --name sparkr-hive-yarn2.6 --pip --r --tgz -Psparkr -Pyarn -Phive -Phive-thriftserver -DskipTests clean package
