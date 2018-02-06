@@ -1,5 +1,5 @@
-common - Ubuntu 16.04
-common - R with devtools
-common - JDK 8
-common - Spark built with Hive
-master - RStudio
+debian:stretch
+--> rocker/r-ver:3.4.3
+--> rocker/rstudio:3.4.3
+--> rocker/tidyverse:3.4.3
+--> jaehyeon/sparkr-demo:latest
