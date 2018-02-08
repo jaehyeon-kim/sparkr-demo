@@ -13,7 +13,7 @@ RUN apt-get update \
 RUN wget -q http://d3kbcqa49mib13.cloudfront.net/spark-${SPARK_VERSION}.tgz  \
     && tar xf spark-${SPARK_VERSION}.tgz
 
-## error making SparkR due to e1071 is missing although it is only suggested
+## error making SparkR because e1071 is missing although it is only suggested
 ## install all suggested packages
 RUN cd /spark-${SPARK_VERSION}/R/pkg \
     && R -e 'devtools::install_deps(dependencies=TRUE)'
