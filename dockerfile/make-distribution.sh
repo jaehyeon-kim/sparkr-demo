@@ -119,10 +119,12 @@ fi
 
 VERSION=$("$MVN" help:evaluate -Dexpression=project.version $@ 2>/dev/null | grep -v "INFO" | tail -n 1)
 
+###
 ### Make R fails
 if [ "$SPARK_VERSION" != "$VERSION" ]; then
     VERSION=$SPARK_VERSION
 fi
+###
 ###
 
 SCALA_VERSION=$("$MVN" help:evaluate -Dexpression=scala.binary.version $@ 2>/dev/null\
