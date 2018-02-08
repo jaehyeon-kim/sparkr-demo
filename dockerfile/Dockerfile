@@ -13,9 +13,18 @@ RUN apt-get update \
 RUN wget -q http://d3kbcqa49mib13.cloudfront.net/spark-${SPARK_VERSION}.tgz  \
     && tar xf spark-${SPARK_VERSION}.tgz
 
-# force R CMD CHECK with --no-tests, --no-manual, --no-vignettes
+## R CMD build with --no-manual --no-build-vignettes
+## R CMD check with --no-tests --no-manual --no-vignettes --no-build-vignettes
 ADD ./check-cran.sh /spark-${SPARK_VERSION}/R/check-cran.sh
 
-# make distribution
-RUN cd spark-${SPARK_VERSION} \
+## prevent /bin/bash^M: bad interpreter: No such file or directory
+RUN sed -i -e 's/\r$//' /spark-${SPARK_VERSION}/R/check-cran.sh
+
+## make distribution
+# error caused due to e1071 is missing although it is only suggested
+# install all suggested packages
+RUN cd /spark-${SPARK_VERSION}/R/pkg \
+    && R -e 'devtools::install_deps(dependencies=TRUE)'
+
+RUN cd /spark-${SPARK_VERSION} \
     && ./dev/make-distribution.sh --name sparkr-hive-yarn2.6 --pip --r --tgz -Psparkr -Pyarn -Phive -Phive-thriftserver -DskipTests clean package

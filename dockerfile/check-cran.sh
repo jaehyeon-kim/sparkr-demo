@@ -17,6 +17,10 @@
 # limitations under the License.
 #
 
+#
+# Updated CRAN_BUILD_OPTIONS and CRAN_CHECK_OPTIONS
+#
+
 set -o pipefail
 set -e
 
@@ -40,7 +44,9 @@ fi
 
 if [ -d "$SPARK_JARS_DIR" ]; then
   # Build a zip file containing the source package with vignettes
-  SPARK_HOME="${SPARK_HOME}" "$R_SCRIPT_PATH/R" CMD build "$FWDIR/pkg"
+  CRAN_BUILD_OPTIONS="--no-manual --no-build-vignettes"
+  echo "Running CRAN build with $CRAN_BUILD_OPTIONS options"
+  SPARK_HOME="${SPARK_HOME}" "$R_SCRIPT_PATH/R" CMD build $CRAN_BUILD_OPTIONS "$FWDIR/pkg"
 
   find pkg/vignettes/. -not -name '.' -not -name '*.Rmd' -not -name '*.md' -not -name '*.pdf' -not -name '*.html' -delete
 else
@@ -51,30 +57,8 @@ fi
 # Run check as-cran.
 VERSION=`grep Version "$FWDIR/pkg/DESCRIPTION" | awk '{print $NF}'`
 
-CRAN_CHECK_OPTIONS="--as-cran"
-CRAN_CHECK_OPTIONS=$CRAN_CHECK_OPTIONS" --no-tests"
-CRAN_CHECK_OPTIONS=$CRAN_CHECK_OPTIONS" --no-manual --no-vignettes"
-
-# if [ -n "$NO_TESTS" ]
-# then
-  # CRAN_CHECK_OPTIONS=$CRAN_CHECK_OPTIONS" --no-tests"
-# fi
-
-# if [ -n "$NO_MANUAL" ]
-# then
-  # CRAN_CHECK_OPTIONS=$CRAN_CHECK_OPTIONS" --no-manual --no-vignettes"
-# fi
-
+CRAN_CHECK_OPTIONS="--no-tests --no-manual --no-vignettes --no-build-vignettes"
 echo "Running CRAN check with $CRAN_CHECK_OPTIONS options"
-
 "$R_SCRIPT_PATH/R" CMD check $CRAN_CHECK_OPTIONS "SparkR_$VERSION.tar.gz"
-
-# if [ -n "$NO_TESTS" ] && [ -n "$NO_MANUAL" ]
-# then
-  # "$R_SCRIPT_PATH/R" CMD check $CRAN_CHECK_OPTIONS "SparkR_$VERSION.tar.gz"
-# else
-  # # This will run tests and/or build vignettes, and require SPARK_HOME
-  # SPARK_HOME="${SPARK_HOME}" "$R_SCRIPT_PATH/R" CMD check $CRAN_CHECK_OPTIONS "SparkR_$VERSION.tar.gz"
-# fi
 
 popd > /dev/null
