@@ -27,4 +27,4 @@ RUN cd /spark-${SPARK_VERSION}/R/pkg \
     && R -e 'devtools::install_deps(dependencies=TRUE)'
 
 RUN cd /spark-${SPARK_VERSION} \
-    && ./dev/make-distribution.sh --name sparkr-hive-yarn2.6 --pip --r --tgz -Psparkr -Pyarn -Phive -Phive-thriftserver -DskipTests clean package
+    && ./dev/make-distribution.sh --name hadoop2.7-hive-sparkr --pip --r --tgz -Psparkr -Pyarn -Phadoop-2.7 -Phive -Phive-thriftserver -DskipTests clean package
