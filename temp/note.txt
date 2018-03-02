@@ -1,5 +1,15 @@
 debian:stretch
---> rocker/r-ver:3.4.3
---> rocker/rstudio:3.4.3
---> rocker/tidyverse:3.4.3
---> jaehyeon/sparkr-demo:latest
+  --> rocker/r-ver
+    --> rocker/rstudio
+      --> rocker/tidyverse
+        --> rockerextra/spark
+          --> spark-master*
+          --> spark-worker*
+
+sources
+
+Scalable Data Science with SparkR
+- https://databricks.com/session/scalable-data-science-with-sparkr
+
+Predicting Flight Delays with a Random Forest
+- https://lucdemortier.github.io/articles/16/RandomForestsWiMLDS
