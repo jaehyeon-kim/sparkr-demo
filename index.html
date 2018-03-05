@@ -5,7 +5,9 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
-  <title>Untitled</title>
+  <meta name="author" content="Jaehyeon kim" />
+  <meta name="date" content="2018-03-14" />
+  <title>SparkR Demo</title>
   <style type="text/css">code{white-space: pre;}</style>
   <style type="text/css">
 div.sourceCode { overflow-x: auto; }
@@ -49,38 +51,185 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </head>
 <body>
 <div class="slide titlepage">
-  <h1 class="title">Untitled</h1>
+  <h1 class="title">SparkR Demo</h1>
   <p class="author">
-
+Jaehyeon kim
   </p>
+  <p class="date">March 14, 2018</p>
 </div>
-<div id="r-markdown" class="slide section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.</p>
+<div id="basic-data-manipulation" class="slide section level1">
+<h1>Basic data manipulation</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.setenv</span>(<span class="st">'JAVA_HOME'</span>=<span class="st">'/usr/lib/jvm/java-8-openjdk-amd64'</span>)
+<span class="kw">Sys.setenv</span>(<span class="st">'HADOOP_HOME'</span>=<span class="st">'/usr/local/hadoop-2.8.2'</span>)
+<span class="kw">Sys.setenv</span>(<span class="st">'SPARK_HOME'</span>=<span class="st">'/usr/local/spark-2.2.1'</span>)
+
+<span class="kw">library</span>(magrittr)
+<span class="kw">library</span>(tibble)
+<span class="kw">library</span>(dplyr)
+<span class="kw">library</span>(SparkR, <span class="dt">lib.loc=</span><span class="kw">file.path</span>(<span class="kw">Sys.getenv</span>(<span class="st">'SPARK_HOME'</span>),<span class="st">'R'</span>, <span class="st">'lib'</span>))
+<span class="kw">sparkR.session</span>(<span class="dt">master =</span> <span class="st">'spark://master:7077'</span>, 
+               <span class="dt">appName =</span> <span class="st">'titanic demo'</span>,
+               <span class="dt">sparkConfig =</span> <span class="kw">list</span>(<span class="dt">spark.driver.memory =</span> <span class="st">'2g'</span>))
+
+## load data
+titanic &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">'titanic.csv'</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+rec &lt;-<span class="st"> </span><span class="kw">nrow</span>(titanic)
+df &lt;-<span class="st"> </span><span class="kw">as.DataFrame</span>(titanic)
+tdf &lt;-<span class="st"> </span><span class="kw">as.tibble</span>(titanic)
+
+## same outputs to base R
+<span class="kw">str</span>(df)
+<span class="kw">head</span>(df)
+
+## check classes
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># SparkDataFrame</span>
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># data.frame</span></code></pre></div>
 </div>
-<div id="slide-with-bullets" class="slide section level2">
-<h2>Slide with Bullets</h2>
+<div id="basic-data-manipulation-continued" class="slide section level1">
+<h1>Basic data manipulation (continued)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### selecting rows, columns
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(df<span class="op">$</span>survived) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="st">'class'</span>, <span class="st">'survived'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+
+tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">select</span>(class, survived) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="st">'survived == &quot;yes&quot; and age == &quot;child&quot;'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(df<span class="op">$</span>survived <span class="op">==</span><span class="st"> 'yes'</span> <span class="op">&amp;</span><span class="st"> </span>df<span class="op">$</span>age <span class="op">==</span><span class="st"> 'child'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+
+tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">filter</span>(survived <span class="op">==</span><span class="st"> 'yes'</span> <span class="op">&amp;</span><span class="st"> </span>age <span class="op">==</span><span class="st"> 'child'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+
+## expressions
+df<span class="op">$</span>survived <span class="co"># Column survived</span>
+<span class="kw">expr</span>(<span class="st">'survived'</span>) <span class="co"># Column survived</span>
+<span class="st">'survived'</span> <span class="co"># string</span></code></pre></div>
 <ul>
-<li>Bullet 1</li>
-<li>Bullet 2</li>
-<li>Bullet 3</li>
+<li>many function names are same to <em>dplyr</em>
+<ul>
+<li>use <code>::</code> for calling them</li>
+</ul></li>
+<li>expressions are interchangeable but not always
+<ul>
+<li>see UDFs below</li>
+</ul></li>
 </ul>
 </div>
-<div id="slide-with-r-output" class="slide section level2">
-<h2>Slide with R Output</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">summary</span>(cars)</code></pre></div>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<div id="basic-data-manipulation-continued-1" class="slide section level1">
+<h1>Basic data manipulation (continued)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### grouping, aggregation
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">count =</span> <span class="kw">n</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">7</span>)
+
+tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(class, age) <span class="op">%&gt;%</span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">count =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">7</span>)
+
+#### operating on columns
+tmp &lt;-<span class="st"> </span>df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">count =</span> <span class="kw">n</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>)))
+tmp <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">prop =</span> <span class="kw">expr</span>(<span class="st">'count'</span>) <span class="op">/</span><span class="st"> </span>rec) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">10</span>)
+
+tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(class, age) <span class="op">%&gt;%</span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">count =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw">mutate</span>(<span class="dt">prop =</span> count <span class="op">/</span><span class="st"> </span>rec) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">10</span>)</code></pre></div>
+<ul>
+<li>want to obtain <em>count</em> and <em>proportion</em> by <em>class</em> and <em>age</em></li>
+<li>unlike <em>dplyr</em>, cannot refer to column that’s created in a chain</li>
+<li>4 ways to improve in subsequent slides</li>
+</ul>
 </div>
-<div id="slide-with-plot" class="slide section level2">
-<h2>Slide with Plot</h2>
-<p><img src="data:image/png;base64,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" width="768" /></p>
+<div id="basic-data-manipulation-continued-2" class="slide section level1">
+<h1>Basic data manipulation (continued)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## dapply, dapplyCollect
+schema &lt;-<span class="st"> </span><span class="kw">structType</span>(
+  <span class="kw">structField</span>(<span class="st">'class'</span>, <span class="st">'string'</span>),
+  <span class="kw">structField</span>(<span class="st">'age'</span>, <span class="st">'string'</span>),
+  <span class="kw">structField</span>(<span class="st">'count'</span>, <span class="st">'double'</span>), <span class="co"># not integer</span>
+  <span class="kw">structField</span>(<span class="st">'prop'</span>, <span class="st">'double'</span>)
+)
+
+fn &lt;-<span class="st"> </span><span class="cf">function</span>(x) {
+  <span class="kw">cbind</span>(x, x<span class="op">$</span>count <span class="op">/</span><span class="st"> </span>rec) <span class="co"># expr() not working</span>
+}
+
+<span class="co"># may take more time but no temporary DF</span>
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">count =</span> <span class="kw">n</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>))) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">dapply</span>(fn, schema) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">10</span>)</code></pre></div>
+<ul>
+<li><code>dapply()</code> - apply a function to each partition of a <em>SparkDataFrame</em></li>
+<li>note <code>expr()</code>/<em>string</em> don’t work in the function</li>
+<li>will be more efficient if applied to a grouped data</li>
+</ul>
+</div>
+<div id="basic-data-manipulation-continued-3" class="slide section level1">
+<h1>Basic data manipulation (continued)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## gapply, gapplyCollect
+schema &lt;-<span class="st"> </span><span class="kw">structType</span>(
+  <span class="kw">structField</span>(<span class="st">'class'</span>, <span class="st">'string'</span>),
+  <span class="kw">structField</span>(<span class="st">'age'</span>, <span class="st">'string'</span>),
+  <span class="kw">structField</span>(<span class="st">'count'</span>, <span class="st">'integer'</span>),
+  <span class="kw">structField</span>(<span class="st">'prop'</span>, <span class="st">'double'</span>)
+)
+
+fn &lt;-<span class="st"> </span><span class="cf">function</span>(key, x) {
+  <span class="kw">data.frame</span>(key, <span class="kw">nrow</span>(x), <span class="kw">nrow</span>(x)<span class="op">/</span>rec, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+}
+
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">gapply</span>(<span class="dt">cols =</span> <span class="kw">c</span>(<span class="st">'class'</span>, <span class="st">'age'</span>), <span class="dt">func =</span> fn, <span class="dt">schema =</span> schema) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">10</span>)</code></pre></div>
+<ul>
+<li><code>dapply()</code> - apply a function to each partition of a grouped <em>SparkDataFrame</em></li>
+<li>note <code>nrow()</code> is not base R function</li>
+</ul>
+</div>
+<div id="basic-data-manipulation-continued-4" class="slide section level1">
+<h1>Basic data manipulation (continued)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### sql queries
+<span class="kw">createOrReplaceTempView</span>(df, <span class="st">'titanic_tbl'</span>)
+
+<span class="st">`</span><span class="dt">%+%</span><span class="st">`</span> &lt;-<span class="st"> </span><span class="cf">function</span>(a, b) <span class="kw">paste</span>(a, b)
+qry &lt;-<span class="st"> '</span>
+<span class="st">  SELECT class, age, count(*) as count, count(*) /'</span> <span class="op">%+%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">format</span>(<span class="kw">round</span>(rec, <span class="dv">1</span>), <span class="dt">nsmall =</span> <span class="dv">1</span>) <span class="op">%+%</span><span class="st"> 'as prop'</span> <span class="op">%+%</span>
+<span class="st">  'FROM titanic_tbl'</span> <span class="op">%+%</span>
+<span class="st">  'group by class, age'</span> <span class="op">%+%</span>
+<span class="st">  'order by class, age'</span>
+
+<span class="kw">sql</span>(qry) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">10</span>)</code></pre></div>
+<ul>
+<li>SQL can be applied after creating/replacing a temporary view</li>
+<li>window functions introduced Spark 2+ - <a href="https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html">link</a></li>
+</ul>
+</div>
+<div id="basic-data-manipulation-continued-5" class="slide section level1">
+<h1>Basic data manipulation (continued)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### spark.lapply
+discnt &lt;-<span class="st"> </span>tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">distinct</span>(class, age)
+lst &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(discnt), <span class="cf">function</span>(i) {
+  cls &lt;-<span class="st"> </span>discnt[i, <span class="dv">1</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">unlist</span>()
+  ag &lt;-<span class="st"> </span>discnt[i, <span class="dv">2</span>] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">unlist</span>()
+  <span class="kw">list</span>(<span class="dt">dat =</span> tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">filter</span>(class <span class="op">==</span><span class="st"> </span>cls <span class="op">&amp;</span><span class="st"> </span>age <span class="op">==</span><span class="st"> </span>ag),
+       <span class="dt">rec =</span> rec)
+})
+
+fn &lt;-<span class="st"> </span><span class="cf">function</span>(elem) {
+  <span class="kw">library</span>(magrittr)
+  elem<span class="op">$</span>dat <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(class, age) <span class="op">%&gt;%</span>
+<span class="st">    </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">count =</span> <span class="kw">n</span>(), <span class="dt">prop =</span> count <span class="op">/</span><span class="st"> </span>elem<span class="op">$</span>rec)
+}
+
+<span class="kw">spark.lapply</span>(lst, fn) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">bind_rows</span>() <span class="op">%&gt;%</span>
+<span class="st">  </span>dplyr<span class="op">::</span><span class="kw">arrange</span>(class, age) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">head</span>(<span class="dv">10</span>)</code></pre></div>
+<ul>
+<li>run non-SparkR functions over a list of elements and distributes the computations with Spark</li>
+<li>limitation - results of all the computations should fit in a single machine</li>
+</ul>
 </div>
 
   <!-- dynamically load mathjax for compatibility with self-contained -->

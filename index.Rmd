@@ -1,35 +1,184 @@
 ---
-title: "Untitled"
-output:
-  slidy_presentation: default
-  ioslides_presentation: default
+title: "SparkR Demo"
+author: Jaehyeon kim
+date: March 14, 2018
+output: slidy_presentation
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+# Basic data manipulation
+
+```{r titanic_01, eval=FALSE}
+Sys.setenv('JAVA_HOME'='/usr/lib/jvm/java-8-openjdk-amd64')
+Sys.setenv('HADOOP_HOME'='/usr/local/hadoop-2.8.2')
+Sys.setenv('SPARK_HOME'='/usr/local/spark-2.2.1')
+
+library(magrittr)
+library(tibble)
+library(dplyr)
+library(SparkR, lib.loc=file.path(Sys.getenv('SPARK_HOME'),'R', 'lib'))
+sparkR.session(master = 'spark://master:7077', 
+               appName = 'titanic demo',
+               sparkConfig = list(spark.driver.memory = '2g'))
+
+## load data
+titanic <- read.csv('titanic.csv', stringsAsFactors = FALSE)
+rec <- nrow(titanic)
+df <- as.DataFrame(titanic)
+tdf <- as.tibble(titanic)
+
+## same outputs to base R
+str(df)
+head(df)
+
+## check classes
+df %>% class() # SparkDataFrame
+df %>% head() %>% class() # data.frame
 ```
 
-## R Markdown
+# Basic data manipulation (continued)
 
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r titanic_02, eval=FALSE}
+#### selecting rows, columns
+df %>% select(df$survived) %>% head()
+df %>% select(expr('survived')) %>% head()
+df %>% select('class', 'survived') %>% head()
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+tdf %>% dplyr::select(class, survived) %>% head()
 
-## Slide with Bullets
+df %>% filter('survived == "yes" and age == "child"') %>% head()
+df %>% filter(df$survived == 'yes' & df$age == 'child') %>% head()
 
-- Bullet 1
-- Bullet 2
-- Bullet 3
+tdf %>% dplyr::filter(survived == 'yes' & age == 'child') %>% head()
 
-## Slide with R Output
-
-```{r cars, echo = TRUE}
-summary(cars)
+## expressions
+df$survived # Column survived
+expr('survived') # Column survived
+'survived' # string
 ```
 
-## Slide with Plot
+- many function names are same to _dplyr_
+    + use `::` for calling them
+- expressions are interchangeable but not always
+    + see UDFs below
 
-```{r pressure}
-plot(pressure)
+# Basic data manipulation (continued)
+
+```{r titanic_03, eval=FALSE}
+#### grouping, aggregation
+df %>% group_by('class', 'age') %>%
+  summarize(count = n(expr('survived'))) %>%
+  arrange('class', 'age') %>% head(7)
+
+tdf %>% dplyr::group_by(class, age) %>%
+  dplyr::summarise(count = n()) %>% head(7)
+
+#### operating on columns
+tmp <- df %>% group_by('class', 'age') %>%
+  summarize(count = n(expr('survived')))
+tmp %>% mutate(prop = expr('count') / rec) %>% 
+  arrange('class', 'age') %>% head(10)
+
+tdf %>% dplyr::group_by(class, age) %>%
+  dplyr::summarise(count = n()) %>% 
+  dplyr::mutate(prop = count / rec) %>%
+  head(10)
 ```
 
+- want to obtain _count_ and _proportion_ by _class_ and _age_
+- unlike _dplyr_, cannot refer to column that's created in a chain
+- 4 ways to improve in subsequent slides
+
+# Basic data manipulation (continued)
+
+```{r titanic_04, eval=FALSE}
+## dapply, dapplyCollect
+schema <- structType(
+  structField('class', 'string'),
+  structField('age', 'string'),
+  structField('count', 'double'), # not integer
+  structField('prop', 'double')
+)
+
+fn <- function(x) {
+  cbind(x, x$count / rec) # expr() not working
+}
+
+# may take more time but no temporary DF
+df %>% group_by('class', 'age') %>%
+  summarize(count = n(expr('survived'))) %>%
+  dapply(fn, schema) %>%
+  arrange('class', 'age') %>% head(10)
+```
+
+- `dapply()` - apply a function to each partition of a _SparkDataFrame_
+- note `expr()`/_string_ don't work in the function
+- will be more efficient if applied to a grouped data
+
+# Basic data manipulation (continued)
+
+```{r titanic_05, eval=FALSE}
+## gapply, gapplyCollect
+schema <- structType(
+  structField('class', 'string'),
+  structField('age', 'string'),
+  structField('count', 'integer'),
+  structField('prop', 'double')
+)
+
+fn <- function(key, x) {
+  data.frame(key, nrow(x), nrow(x)/rec, stringsAsFactors = FALSE)
+}
+
+df %>% gapply(cols = c('class', 'age'), func = fn, schema = schema) %>%
+  arrange('class', 'age') %>% head(10)
+```
+
+- `dapply()` - apply a function to each partition of a grouped _SparkDataFrame_
+- note `nrow()` is not base R function
+
+# Basic data manipulation (continued)
+
+```{r titanic_06, eval=FALSE}
+#### sql queries
+createOrReplaceTempView(df, 'titanic_tbl')
+
+`%+%` <- function(a, b) paste(a, b)
+qry <- '
+  SELECT class, age, count(*) as count, count(*) /' %+% 
+  format(round(rec, 1), nsmall = 1) %+% 'as prop' %+%
+  'FROM titanic_tbl' %+%
+  'group by class, age' %+%
+  'order by class, age'
+
+sql(qry) %>% head(10)
+```
+
+- SQL can be applied after creating/replacing a temporary view
+- window functions introduced Spark 2 - [link](https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html)
+
+# Basic data manipulation (continued)
+
+```{r titanic_07, eval=FALSE}
+#### spark.lapply
+discnt <- tdf %>% dplyr::distinct(class, age)
+lst <- lapply(1:nrow(discnt), function(i) {
+  cls <- discnt[i, 1] %>% unlist()
+  ag <- discnt[i, 2] %>% unlist()
+  list(dat = tdf %>% dplyr::filter(class == cls & age == ag),
+       rec = rec)
+})
+
+fn <- function(elem) {
+  library(magrittr)
+  elem$dat %>% dplyr::group_by(class, age) %>%
+    dplyr::summarise(count = n(), prop = count / elem$rec)
+}
+
+spark.lapply(lst, fn) %>%
+  bind_rows() %>%
+  dplyr::arrange(class, age) %>%
+  head(10)
+```
+
+- run non-SparkR functions over a list of elements and distributes the computations with Spark
+- limitation - results of all the computations should fit in a single machine
