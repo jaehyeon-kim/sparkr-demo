@@ -13,3 +13,6 @@ Scalable Data Science with SparkR
 
 Predicting Flight Delays with a Random Forest
 - https://lucdemortier.github.io/articles/16/RandomForestsWiMLDS
+
+PREDICTING AIRLINE DELAYS USING SPARKR
+- https://hortonworks.com/tutorial/predicting-airline-delays-using-sparkr/

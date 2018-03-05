@@ -5,3 +5,5 @@ RUN rm -rf /etc/services.d/rstudio \
     && mkdir -p /etc/services.d/spark-worker \
     && echo '#!/usr/bin/with-contenv sh \n /opt/util/bin/start-spark worker master' > /etc/services.d/spark-worker/run
 
+# add AWS credentials
+COPY ./hadoop-conf/*.xml $HADOOP_CONF_DIR/

@@ -4,3 +4,5 @@ MAINTAINER Jaehyeon Kim <dottami@gmail.com>
 RUN mkdir -p /etc/services.d/spark-master \
     && echo '#!/usr/bin/with-contenv sh \n /opt/util/bin/start-spark master' > /etc/services.d/spark-master/run
 
+# add AWS credentials
+COPY ./hadoop-conf/*.xml $HADOOP_CONF_DIR/
