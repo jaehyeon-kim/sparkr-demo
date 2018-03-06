@@ -142,12 +142,12 @@ df %>% gapply(cols = c('class', 'age'), func = fn, schema = schema) %>%
 #### sql queries
 createOrReplaceTempView(df, 'titanic_tbl')
 
-`%+%` <- function(a, b) paste(a, b)
+`%++%` <- function(a, b) paste(a, b)
 qry <- '
-  SELECT class, age, count(*) as count, count(*) /' %+% 
-  format(round(rec, 1), nsmall = 1) %+% 'as prop' %+%
-  'FROM titanic_tbl' %+%
-  'group by class, age' %+%
+  SELECT class, age, count(*) as count, count(*) /' %++% 
+  format(round(rec, 1), nsmall = 1) %++% 'as prop' %++%
+  'FROM titanic_tbl' %++%
+  'group by class, age' %++%
   'order by class, age'
 
 sql(qry) %>% head(10)
