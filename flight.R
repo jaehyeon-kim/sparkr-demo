@@ -21,9 +21,28 @@ dat <- read.df('s3n://sparkr-demo/public-data/flight.csv',
                source = 'csv', 
                inferSchema = 'true')
 
+`%++%` <- function(a, b) paste(a, b)
+weekend_expr <- "case when date_format(to_date(date, 'yyyy/mm/dd'), 'E')" %++%
+                      "in ('Fri', 'Sat', 'Sun') then 1 else 0 end"
 dat <- dat %>% mutate(
   year = expr("cast(split(date, '/')[0] AS integer)"),
   month = expr("cast(split(date, '/')[1] AS integer)"),
   day = expr("cast(split(date, '/')[2] AS integer)"),
-  weekday = expr("date_format(to_date(date, 'yyyy/mm/dd'), 'EEE')")
-)
+  weekend = expr(weekend_expr),
+  dep_hour = floor(expr('dep_time')/100),
+  is_delay = cast(ifelse(expr('arr_delay > 15'), 1, 0), 'integer')
+) %>% drop('date') %>%
+  filter(expr('cancelled') == 0) %>%
+  dropna(cols = c('arr_delay'))
+
+dat_split <- randomSplit(dat, weights = c(0.7, 0.3), 1237)
+train <- dat_split[[1]]
+test <- dat_split[[2]]
+
+
+
+
+
+
+
+
