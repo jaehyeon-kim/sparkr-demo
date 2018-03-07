@@ -12,7 +12,7 @@ ext_opts <- '-Dhttp.proxyHost=10.74.1.25 -Dhttp.proxyPort=8080 -Dhttps.proxyHost
 
 sparkR.session(master = "spark://master:7077",
                appName = 'sparkr_demo_flight',
-               sparkConfig = list(spark.driver.memory = '2g', spark.network.timeout = '12000s'), 
+               sparkConfig = list(spark.driver.memory = '2g'), 
                sparkPackages = 'org.apache.hadoop:hadoop-aws:2.8.2',
                spark.driver.extraJavaOptions = ext_opts)
 

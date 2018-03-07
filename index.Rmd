@@ -5,37 +5,34 @@ date: March 14, 2018
 output: slidy_presentation
 ---
 
-# Basic data manipulation
+# Data manipulation - _local DF_
 
 ```{r titanic_01, eval=FALSE}
 Sys.setenv('JAVA_HOME'='/usr/lib/jvm/java-8-openjdk-amd64')
 Sys.setenv('HADOOP_HOME'='/usr/local/hadoop-2.8.2')
 Sys.setenv('SPARK_HOME'='/usr/local/spark-2.2.1')
 
-library(magrittr)
-library(tibble)
-library(dplyr)
+library(magrittr); library(tibble); library(dplyr)
 library(SparkR, lib.loc=file.path(Sys.getenv('SPARK_HOME'),'R', 'lib'))
-sparkR.session(master = 'spark://master:7077', 
-               appName = 'titanic demo',
+sparkR.session(master = 'spark://master:7077', appName = 'titanic demo',
                sparkConfig = list(spark.driver.memory = '2g'))
 
-## load data
 titanic <- read.csv('titanic.csv', stringsAsFactors = FALSE)
 rec <- nrow(titanic)
 df <- as.DataFrame(titanic)
 tdf <- as.tibble(titanic)
 
-## same outputs to base R
-str(df)
-head(df)
+## quick check
+str(df); printSchema(df)
+head(df); summary(df) %>% head(10)
 
-## check classes
+## different classes
 df %>% class() # SparkDataFrame
 df %>% head() %>% class() # data.frame
+df %>% collect() # SparkDataFrame to data.frame
 ```
 
-# Basic data manipulation (continued)
+# Data manipulation - _select, filter..._
 
 ```{r titanic_02, eval=FALSE}
 #### selecting rows, columns
@@ -58,10 +55,10 @@ expr('survived') # Column survived
 
 - many function names are same to _dplyr_
     + use `::` for calling them
-- expressions are interchangeable but not always
-    + see UDFs below
+- expressions are interchangeable but not always - see _dapply_ section
+- `expr()` is more expressive - see ML section
 
-# Basic data manipulation (continued)
+# Data manipulation - _group_by, mutate ..._
 
 ```{r titanic_03, eval=FALSE}
 #### grouping, aggregation
@@ -88,7 +85,7 @@ tdf %>% dplyr::group_by(class, age) %>%
 - unlike _dplyr_, cannot refer to column that's created in a chain
 - 4 ways to improve in subsequent slides
 
-# Basic data manipulation (continued)
+# Data manipulation - _dapply_
 
 ```{r titanic_04, eval=FALSE}
 ## dapply, dapplyCollect
@@ -114,7 +111,7 @@ df %>% group_by('class', 'age') %>%
 - note `expr()`/_string_ don't work in the function
 - will be more efficient if applied to a grouped data
 
-# Basic data manipulation (continued)
+# Data manipulation - _gapply_
 
 ```{r titanic_05, eval=FALSE}
 ## gapply, gapplyCollect
@@ -136,7 +133,7 @@ df %>% gapply(cols = c('class', 'age'), func = fn, schema = schema) %>%
 - `dapply()` - apply a function to each partition of a grouped _SparkDataFrame_
 - note `nrow()` is not base R function
 
-# Basic data manipulation (continued)
+# Data manipulation - _SQL_
 
 ```{r titanic_06, eval=FALSE}
 #### sql queries
@@ -145,7 +142,7 @@ createOrReplaceTempView(df, 'titanic_tbl')
 `%++%` <- function(a, b) paste(a, b)
 qry <- '
   SELECT class, age, count(*) as count, count(*) /' %++% 
-  format(round(rec, 1), nsmall = 1) %++% 'as prop' %++%
+          format(round(rec, 1), nsmall = 1) %++% 'as prop' %++%
   'FROM titanic_tbl' %++%
   'group by class, age' %++%
   'order by class, age'
@@ -154,9 +151,10 @@ sql(qry) %>% head(10)
 ```
 
 - SQL can be applied after creating/replacing a temporary view
-- window functions introduced Spark 2 - [link](https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html)
+- [window functions](https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html) introduced in Spark 2
+- do we need [HiveQL](https://cwiki.apache.org/confluence/display/Hive/LanguageManual)?
 
-# Basic data manipulation (continued)
+# Data manipulation - _spark.lapply_
 
 ```{r titanic_07, eval=FALSE}
 #### spark.lapply

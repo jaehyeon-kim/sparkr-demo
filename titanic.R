@@ -2,27 +2,26 @@ Sys.setenv('JAVA_HOME'='/usr/lib/jvm/java-8-openjdk-amd64')
 Sys.setenv('HADOOP_HOME'='/usr/local/hadoop-2.8.2')
 Sys.setenv('SPARK_HOME'='/usr/local/spark-2.2.1')
 
-library(magrittr)
-library(tibble)
-library(dplyr)
+library(magrittr); library(tibble); library(dplyr)
 library(SparkR, lib.loc=file.path(Sys.getenv('SPARK_HOME'),'R', 'lib'))
-sparkR.session(master = 'spark://master:7077', 
-               appName = 'titanic demo',
+sparkR.session(master = 'spark://master:7077', appName = 'titanic demo',
                sparkConfig = list(spark.driver.memory = '2g'))
 
-## load data
 titanic <- read.csv('titanic.csv', stringsAsFactors = FALSE)
 rec <- nrow(titanic)
 df <- as.DataFrame(titanic)
 tdf <- as.tibble(titanic)
 
-## same outputs to base R
+## quick check
 str(df)
+printSchema(df)
 head(df)
+summary(df) %>% head(10)
 
-## check classes
+## different classes
 df %>% class() # SparkDataFrame
 df %>% head() %>% class() # data.frame
+df %>% collect() # SparkDataFrame to data.frame
 
 #### selecting rows, columns
 df %>% select(df$survived) %>% head()
@@ -73,7 +72,6 @@ fn <- function(x) {
   cbind(x, x$count / rec) # expr() not working
 }
 
-# may take more time but no temporary DF
 df %>% group_by('class', 'age') %>%
   summarize(count = n(expr('survived'))) %>%
   dapply(fn, schema) %>%

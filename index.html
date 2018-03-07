@@ -57,36 +57,33 @@ Jaehyeon kim
   </p>
   <p class="date">March 14, 2018</p>
 </div>
-<div id="basic-data-manipulation" class="slide section level1">
-<h1>Basic data manipulation</h1>
+<div id="data-manipulation---local-df" class="slide section level1">
+<h1>Data manipulation - <em>local DF</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.setenv</span>(<span class="st">'JAVA_HOME'</span>=<span class="st">'/usr/lib/jvm/java-8-openjdk-amd64'</span>)
 <span class="kw">Sys.setenv</span>(<span class="st">'HADOOP_HOME'</span>=<span class="st">'/usr/local/hadoop-2.8.2'</span>)
 <span class="kw">Sys.setenv</span>(<span class="st">'SPARK_HOME'</span>=<span class="st">'/usr/local/spark-2.2.1'</span>)
 
-<span class="kw">library</span>(magrittr)
-<span class="kw">library</span>(tibble)
-<span class="kw">library</span>(dplyr)
+<span class="kw">library</span>(magrittr); <span class="kw">library</span>(tibble); <span class="kw">library</span>(dplyr)
 <span class="kw">library</span>(SparkR, <span class="dt">lib.loc=</span><span class="kw">file.path</span>(<span class="kw">Sys.getenv</span>(<span class="st">'SPARK_HOME'</span>),<span class="st">'R'</span>, <span class="st">'lib'</span>))
-<span class="kw">sparkR.session</span>(<span class="dt">master =</span> <span class="st">'spark://master:7077'</span>, 
-               <span class="dt">appName =</span> <span class="st">'titanic demo'</span>,
+<span class="kw">sparkR.session</span>(<span class="dt">master =</span> <span class="st">'spark://master:7077'</span>, <span class="dt">appName =</span> <span class="st">'titanic demo'</span>,
                <span class="dt">sparkConfig =</span> <span class="kw">list</span>(<span class="dt">spark.driver.memory =</span> <span class="st">'2g'</span>))
 
-## load data
 titanic &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">'titanic.csv'</span>, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 rec &lt;-<span class="st"> </span><span class="kw">nrow</span>(titanic)
 df &lt;-<span class="st"> </span><span class="kw">as.DataFrame</span>(titanic)
 tdf &lt;-<span class="st"> </span><span class="kw">as.tibble</span>(titanic)
 
-## same outputs to base R
-<span class="kw">str</span>(df)
-<span class="kw">head</span>(df)
+## quick check
+<span class="kw">str</span>(df); <span class="kw">printSchema</span>(df)
+<span class="kw">head</span>(df); <span class="kw">summary</span>(df) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">10</span>)
 
-## check classes
+## different classes
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># SparkDataFrame</span>
-df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># data.frame</span></code></pre></div>
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># data.frame</span>
+df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">collect</span>() <span class="co"># SparkDataFrame to data.frame</span></code></pre></div>
 </div>
-<div id="basic-data-manipulation-continued" class="slide section level1">
-<h1>Basic data manipulation (continued)</h1>
+<div id="data-manipulation---select-filter" class="slide section level1">
+<h1>Data manipulation - <em>select, filter…</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### selecting rows, columns
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(df<span class="op">$</span>survived) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
@@ -108,14 +105,12 @@ df<span class="op">$</span>survived <span class="co"># Column survived</span>
 <ul>
 <li>use <code>::</code> for calling them</li>
 </ul></li>
-<li>expressions are interchangeable but not always
-<ul>
-<li>see UDFs below</li>
-</ul></li>
+<li>expressions are interchangeable but not always - see <em>dapply</em> section</li>
+<li><code>expr()</code> is more expressive - see ML section</li>
 </ul>
 </div>
-<div id="basic-data-manipulation-continued-1" class="slide section level1">
-<h1>Basic data manipulation (continued)</h1>
+<div id="data-manipulation---group_by-mutate" class="slide section level1">
+<h1>Data manipulation - <em>group_by, mutate …</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### grouping, aggregation
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">count =</span> <span class="kw">n</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>))) <span class="op">%&gt;%</span>
@@ -140,8 +135,8 @@ tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op"
 <li>4 ways to improve in subsequent slides</li>
 </ul>
 </div>
-<div id="basic-data-manipulation-continued-2" class="slide section level1">
-<h1>Basic data manipulation (continued)</h1>
+<div id="data-manipulation---dapply" class="slide section level1">
+<h1>Data manipulation - <em>dapply</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## dapply, dapplyCollect
 schema &lt;-<span class="st"> </span><span class="kw">structType</span>(
   <span class="kw">structField</span>(<span class="st">'class'</span>, <span class="st">'string'</span>),
@@ -165,8 +160,8 @@ df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group
 <li>will be more efficient if applied to a grouped data</li>
 </ul>
 </div>
-<div id="basic-data-manipulation-continued-3" class="slide section level1">
-<h1>Basic data manipulation (continued)</h1>
+<div id="data-manipulation---gapply" class="slide section level1">
+<h1>Data manipulation - <em>gapply</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## gapply, gapplyCollect
 schema &lt;-<span class="st"> </span><span class="kw">structType</span>(
   <span class="kw">structField</span>(<span class="st">'class'</span>, <span class="st">'string'</span>),
@@ -186,27 +181,28 @@ df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">gappl
 <li>note <code>nrow()</code> is not base R function</li>
 </ul>
 </div>
-<div id="basic-data-manipulation-continued-4" class="slide section level1">
-<h1>Basic data manipulation (continued)</h1>
+<div id="data-manipulation---sql" class="slide section level1">
+<h1>Data manipulation - <em>SQL</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### sql queries
 <span class="kw">createOrReplaceTempView</span>(df, <span class="st">'titanic_tbl'</span>)
 
-<span class="st">`</span><span class="dt">%+%</span><span class="st">`</span> &lt;-<span class="st"> </span><span class="cf">function</span>(a, b) <span class="kw">paste</span>(a, b)
+<span class="st">`</span><span class="dt">%++%</span><span class="st">`</span> &lt;-<span class="st"> </span><span class="cf">function</span>(a, b) <span class="kw">paste</span>(a, b)
 qry &lt;-<span class="st"> '</span>
-<span class="st">  SELECT class, age, count(*) as count, count(*) /'</span> <span class="op">%+%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">format</span>(<span class="kw">round</span>(rec, <span class="dv">1</span>), <span class="dt">nsmall =</span> <span class="dv">1</span>) <span class="op">%+%</span><span class="st"> 'as prop'</span> <span class="op">%+%</span>
-<span class="st">  'FROM titanic_tbl'</span> <span class="op">%+%</span>
-<span class="st">  'group by class, age'</span> <span class="op">%+%</span>
+<span class="st">  SELECT class, age, count(*) as count, count(*) /'</span> <span class="op">%++%</span><span class="st"> </span>
+<span class="st">          </span><span class="kw">format</span>(<span class="kw">round</span>(rec, <span class="dv">1</span>), <span class="dt">nsmall =</span> <span class="dv">1</span>) <span class="op">%++%</span><span class="st"> 'as prop'</span> <span class="op">%++%</span>
+<span class="st">  'FROM titanic_tbl'</span> <span class="op">%++%</span>
+<span class="st">  'group by class, age'</span> <span class="op">%++%</span>
 <span class="st">  'order by class, age'</span>
 
 <span class="kw">sql</span>(qry) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>(<span class="dv">10</span>)</code></pre></div>
 <ul>
 <li>SQL can be applied after creating/replacing a temporary view</li>
-<li>window functions introduced Spark 2+ - <a href="https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html">link</a></li>
+<li><a href="https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html">window functions</a> introduced in Spark 2</li>
+<li>do we need <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual">HiveQL</a>?</li>
 </ul>
 </div>
-<div id="basic-data-manipulation-continued-5" class="slide section level1">
-<h1>Basic data manipulation (continued)</h1>
+<div id="data-manipulation---spark.lapply" class="slide section level1">
+<h1>Data manipulation - <em>spark.lapply</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">#### spark.lapply
 discnt &lt;-<span class="st"> </span>tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">distinct</span>(class, age)
 lst &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(discnt), <span class="cf">function</span>(i) {
