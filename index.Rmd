@@ -180,3 +180,47 @@ spark.lapply(lst, fn) %>%
 
 - run non-SparkR functions over a list of elements and distributes the computations with Spark
 - limitation - results of all the computations should fit in a single machine
+
+# Machine Learning - _in progress_
+
+```{r flight_01, eval=FALSE}
+      date dep_time arr_time unique_carrier air_time arr_delay dep_delay origin dest distance cancelled
+1 2007/1/1     1232     1341             WN       54         1         7    SMF  ONT      389         0
+2 2007/1/1     1918     2043             WN       74         8        13    SMF  PDX      479         0
+3 2007/1/1     2206     2334             WN       73        34        36    SMF  PDX      479         0
+4 2007/1/1     1230     1356             WN       75        26        30    SMF  PDX      479         0
+5 2007/1/1      831      957             WN       74        -3         1    SMF  PDX      479         0
+6 2007/1/1     1430     1553             WN       74         3        10    SMF  PDX      479         0
+```
+
+<style>
+.column-left{
+  float: left;
+  width: 50%;
+  text-align: left;
+}
+.column-right{
+  float: right;
+  width: 50%;
+  text-align: left;
+}
+</style>
+
+<div class="column-left">
++ **date** date (yyyy/mm/dd)  
++ **dep_time** departure time (hhmm)
++ **arr_time** arrival time (hhmm)
++ **unique_carrier** carrier code
++ **air_time** flight time
++ **arr_delay** arrival delay
+</div>
+<div class="column-right">
++ **dep_delay** departure delay
++ **origin** origin
++ **dest** destination
++ **distance** distance
++ **cancelled** is cancelled?
+
+see [source]()
+</div>
+

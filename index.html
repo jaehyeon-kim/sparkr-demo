@@ -227,6 +227,49 @@ fn &lt;-<span class="st"> </span><span class="cf">function</span>(elem) {
 <li>limitation - results of all the computations should fit in a single machine</li>
 </ul>
 </div>
+<div id="machine-learning---in-progress" class="slide section level1">
+<h1>Machine Learning - <em>in progress</em></h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">      date dep_time arr_time unique_carrier air_time arr_delay dep_delay origin dest distance cancelled
+<span class="dv">1</span> <span class="dv">2007</span><span class="op">/</span><span class="dv">1</span><span class="op">/</span><span class="dv">1</span>     <span class="dv">1232</span>     <span class="dv">1341</span>             WN       <span class="dv">54</span>         <span class="dv">1</span>         <span class="dv">7</span>    SMF  ONT      <span class="dv">389</span>         <span class="dv">0</span>
+<span class="dv">2</span> <span class="dv">2007</span><span class="op">/</span><span class="dv">1</span><span class="op">/</span><span class="dv">1</span>     <span class="dv">1918</span>     <span class="dv">2043</span>             WN       <span class="dv">74</span>         <span class="dv">8</span>        <span class="dv">13</span>    SMF  PDX      <span class="dv">479</span>         <span class="dv">0</span>
+<span class="dv">3</span> <span class="dv">2007</span><span class="op">/</span><span class="dv">1</span><span class="op">/</span><span class="dv">1</span>     <span class="dv">2206</span>     <span class="dv">2334</span>             WN       <span class="dv">73</span>        <span class="dv">34</span>        <span class="dv">36</span>    SMF  PDX      <span class="dv">479</span>         <span class="dv">0</span>
+<span class="dv">4</span> <span class="dv">2007</span><span class="op">/</span><span class="dv">1</span><span class="op">/</span><span class="dv">1</span>     <span class="dv">1230</span>     <span class="dv">1356</span>             WN       <span class="dv">75</span>        <span class="dv">26</span>        <span class="dv">30</span>    SMF  PDX      <span class="dv">479</span>         <span class="dv">0</span>
+<span class="dv">5</span> <span class="dv">2007</span><span class="op">/</span><span class="dv">1</span><span class="op">/</span><span class="dv">1</span>      <span class="dv">831</span>      <span class="dv">957</span>             WN       <span class="dv">74</span>        <span class="op">-</span><span class="dv">3</span>         <span class="dv">1</span>    SMF  PDX      <span class="dv">479</span>         <span class="dv">0</span>
+<span class="dv">6</span> <span class="dv">2007</span><span class="op">/</span><span class="dv">1</span><span class="op">/</span><span class="dv">1</span>     <span class="dv">1430</span>     <span class="dv">1553</span>             WN       <span class="dv">74</span>         <span class="dv">3</span>        <span class="dv">10</span>    SMF  PDX      <span class="dv">479</span>         <span class="dv">0</span></code></pre></div>
+<style>
+.column-left{
+  float: left;
+  width: 50%;
+  text-align: left;
+}
+.column-right{
+  float: right;
+  width: 50%;
+  text-align: left;
+}
+</style>
+<div class="column-left">
+<ul>
+<li><strong>date</strong> date (yyyy/mm/dd)<br />
+</li>
+<li><strong>dep_time</strong> departure time (hhmm)</li>
+<li><strong>arr_time</strong> arrival time (hhmm)</li>
+<li><strong>unique_carrier</strong> carrier code</li>
+<li><strong>air_time</strong> flight time</li>
+<li><strong>arr_delay</strong> arrival delay</li>
+</ul>
+</div>
+<div class="column-right">
+<ul>
+<li><strong>dep_delay</strong> departure delay</li>
+<li><strong>origin</strong> origin</li>
+<li><strong>dest</strong> destination</li>
+<li><strong>distance</strong> distance</li>
+<li><strong>cancelled</strong> is cancelled?</li>
+</ul>
+<p>see <a href>source</a></p>
+</div>
+</div>
 
   <!-- dynamically load mathjax for compatibility with self-contained -->
   <script>
