@@ -83,5 +83,17 @@ get_feat_importance <- function(model) {
     stringr::str_replace_all('[\\[|\\]]', '') %>%
     strsplit(',') %>% unlist() %>% as.numeric()
   data.frame(feature = features, importance = importance) %>%
-    dplyr::arrange(-importance)
+    dplyr::arrange(-importance) %>% as.tibble()
+}
+
+extract_from_jmethod <- function(dat, which='prob') {
+  envs <- dat[, which]
+  do.call(rbind, lapply(envs, function(e) {
+    df <- data.frame(
+      sparkR.callJMethod(unlist(e), 'apply', as.integer(0)),
+      sparkR.callJMethod(unlist(e), 'apply', as.integer(1))
+    )
+    names(df) <- paste0(which, c('_yes', '_no'))
+    df
+  }))
 }

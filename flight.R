@@ -26,8 +26,8 @@ dat <- read.df('s3n://sparkr-demo/public-data/flight_2007.csv',
 #### 1. exploratory analysis with sample data (10%)
 # dat_s <- randomSplit(dat, weights = c(0.1, 0.9), seed)[[1]] %>%
 #   collect() %>% as.tibble()
-# readr::write_csv(dat_s, 'flight_2007_10p.csv')
-dat_s <- readr::read_csv('flight_2007_10p.csv')
+# readr::write_csv(dat_s, './flight-present/flight_2007_10p.csv')
+dat_s <- readr::read_csv('./flight-present/flight_2007_10p.csv')
 dat_s <- dat_s %>% 
   dplyr::filter(!is.na(arr_delay) & !is.na(dep_delay)) %>%
   dplyr::mutate(
@@ -104,25 +104,43 @@ test <- dat_split[[2]]
 formula <- 'is_delay ~ dep_delay + month_c + dep_hour_c + weekday' %>% 
   as.formula()
 
-model <- spark.randomForest(train, formula, 'classification', numTrees = 10)
-#write.ml(model, file.path('/sparkflight_rm_ntree10.model'))
+# model <- spark.randomForest(train, formula, 'classification')
+# write.ml(model, 's3n://sparkr-demo/model/flight_2007_rf.model')
+model <- read.ml('s3n://sparkr-demo/model/flight_2007_rf.model')
 
-# Model summary
+## model prediction
+# https://stackoverflow.com/questions/38031987/sparkr-1-6-how-to-predict-probability-when-modeling-with-glm-binomial-family
+# https://stackoverflow.com/questions/37903288/what-do-colum-rawprediction-and-probability-of-dataframe-mean-in-spark-mllib
+preds <- predict(model, test)
+
+hpreds <- preds %>% head(50) %>%
+  dplyr::select(arr_delay, dep_delay, is_delay, prediction, probability, rawPrediction) %>%
+  dplyr::rename(prob = probability, raw_pred = rawPrediction)
+
+hpreds_up <- bind_cols(hpreds,
+                       extract_from_jmethod(hpreds, 'prob'),
+                       extract_from_jmethod(hpreds, 'raw_pred')
+) %>% dplyr::select(-prob, -raw_pred)
+# readr::write_csv(hpreds_up, './flight-present/hpreds_up.csv')
+# hpreds_up <- readr::read_csv('./flight-present/hpreds_up.csv')
+
+cmat <- preds %>% crosstab('is_delay', 'prediction')
+# readr::write_csv(cmat, './flight-present/cmat.csv')
+# cmat <- readr::read_csv('./flight-present/cmat.csv')
+cmat
+
+# accuracy
+1 - sum(cmat$no[1], cmat$yes[2])/sum(cmat$no, cmat$yes)
+# 0.9096646
+
+## feature importance
 s <- summary(model)
 
 importance <- get_feat_importance(model)
+# readr::write_csv(importance, './flight-present/importance.csv')
+# importance <- readr::read_csv('./flight-present/importance.csv')
 ggplot(importance, aes(x=feature, y=importance)) +
-  geom_bar(stat = 'identity', fill = 'steel blue')
-
-# Prediction
-preds <- predict(model, test)
-preds %>% head(50)
-
-cm <- preds %>% crosstab('is_delay', 'prediction')
-cm
-
-# accuracy
-1 - sum(cm$no[1], cm$yes[2])/sum(cm$no, cm$yes)
-
-
-
+  geom_bar(stat = 'identity', fill = 'steel blue') +
+  ggtitle('Feature importance') +
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.text.x = element_text(angle = 45, hjust = 1))
