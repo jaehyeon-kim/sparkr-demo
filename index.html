@@ -57,8 +57,14 @@ Jaehyeon kim
   </p>
   <p class="date">March 14, 2018</p>
 </div>
-<div id="data-manipulation---load-dataframe" class="slide section level1">
-<h1>Data manipulation - <em>load DataFrame</em></h1>
+<div id="intro-to-spark-docker-dev-env" class="slide section level1">
+<h1>Intro to Spark, Docker, Dev env</h1>
+<ul>
+<li>TO DO</li>
+</ul>
+</div>
+<div id="intro-to-data-manipulation---load-data" class="slide section level1">
+<h1>Intro to data manipulation - <em>load data</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Sys.setenv</span>(<span class="st">'JAVA_HOME'</span>=<span class="st">'/usr/lib/jvm/java-8-openjdk-amd64'</span>)
 <span class="kw">Sys.setenv</span>(<span class="st">'HADOOP_HOME'</span>=<span class="st">'/usr/local/hadoop-2.8.2'</span>)
 <span class="kw">Sys.setenv</span>(<span class="st">'SPARK_HOME'</span>=<span class="st">'/usr/local/spark-2.2.1'</span>)
@@ -87,8 +93,8 @@ root
  <span class="op">|--</span><span class="st"> </span>sex<span class="op">:</span><span class="st"> </span><span class="kw">string</span> (<span class="dt">nullable =</span> true)
  <span class="op">|--</span><span class="st"> </span>survived<span class="op">:</span><span class="st"> </span><span class="kw">string</span> (<span class="dt">nullable =</span> true)</code></pre></div>
 </div>
-<div id="data-manipulation---check-data" class="slide section level1">
-<h1>Data manipulation - <em>check data</em></h1>
+<div id="intro-to-data-manipulation---check-data" class="slide section level1">
+<h1>Intro to data manipulation - <em>check data</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## more functions
 <span class="kw">str</span>(df)
 <span class="st">'SparkDataFrame'</span><span class="op">:</span><span class="st"> </span><span class="dv">4</span> variables<span class="op">:</span>
@@ -111,8 +117,8 @@ df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">colle
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># SparkDataFrame</span>
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>() <span class="co"># data.frame</span></code></pre></div>
 </div>
-<div id="data-manipulation---select-filter" class="slide section level1">
-<h1>Data manipulation - <em>select, filter…</em></h1>
+<div id="intro-to-data-manipulation---select-filter" class="slide section level1">
+<h1>Intro to data manipulation - <em>select, filter…</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## column expressions
 df<span class="op">$</span>survived <span class="co"># Column survived</span>
 <span class="kw">column</span>(<span class="st">'survived'</span>) <span class="co"># Column survived</span>
@@ -140,8 +146,8 @@ tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op"
 <li><code>expr()</code> is more expressive - see ML section</li>
 </ul>
 </div>
-<div id="data-manipulation---group_by-mutate" class="slide section level1">
-<h1>Data manipulation - <em>group_by, mutate …</em></h1>
+<div id="intro-to-data-manipulation---group_by-mutate" class="slide section level1">
+<h1>Intro to data manipulation - <em>group_by, mutate …</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## creating variable
 df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">age_c =</span> <span class="kw">ifelse</span>(<span class="kw">expr</span>(<span class="st">'age'</span>) <span class="op">==</span><span class="st"> 'adult'</span>, <span class="st">'1'</span>, <span class="st">'0'</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">head</span>(<span class="dv">2</span>)
@@ -167,8 +173,8 @@ df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group
 tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">group_by</span>(class, age) <span class="op">%&gt;%</span>
 <span class="st">  </span>dplyr<span class="op">::</span><span class="kw">summarise</span>(<span class="dt">count =</span> <span class="kw">n</span>())</code></pre></div>
 </div>
-<div id="data-manipulation---join" class="slide section level1">
-<h1>Data manipulation - <em>join</em></h1>
+<div id="intro-to-data-manipulation---join" class="slide section level1">
+<h1>Intro to data manipulation - <em>join</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">rdf &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">age =</span> <span class="kw">c</span>(<span class="st">'adult'</span>, <span class="st">'child'</span>), <span class="dt">lvl =</span> <span class="kw">c</span>(<span class="st">'0'</span>, <span class="st">'1'</span>), <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
 rDF &lt;-<span class="st"> </span><span class="kw">as.DataFrame</span>(rdf)
 
@@ -197,8 +203,8 @@ tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op"
 </ul></li>
 </ul>
 </div>
-<div id="data-manipulation---example" class="slide section level1">
-<h1>Data manipulation - <em>example</em></h1>
+<div id="data-manipulation-case-study" class="slide section level1">
+<h1>Data manipulation case study</h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tmp &lt;-<span class="st"> </span>df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group_by</span>(<span class="st">'class'</span>, <span class="st">'age'</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">count =</span> <span class="kw">n</span>(<span class="kw">expr</span>(<span class="st">'survived'</span>)))
 tmp <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">prop =</span> <span class="kw">expr</span>(<span class="st">'count'</span>) <span class="op">/</span><span class="st"> </span>rec) <span class="op">%&gt;%</span><span class="st"> </span>
@@ -225,8 +231,8 @@ tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op"
 <li>4 ways to achieve without a temp DF</li>
 </ul>
 </div>
-<div id="data-manipulation---dapply" class="slide section level1">
-<h1>Data manipulation - <em>dapply</em></h1>
+<div id="data-manipulation-case-study---dapply" class="slide section level1">
+<h1>Data manipulation case study - <em>dapply</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## dapply, dapplyCollect
 schema &lt;-<span class="st"> </span><span class="kw">structType</span>(
   <span class="kw">structField</span>(<span class="st">'class'</span>, <span class="st">'string'</span>),
@@ -250,8 +256,8 @@ df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">group
 <li>will be more efficient if applied to a grouped data</li>
 </ul>
 </div>
-<div id="data-manipulation---gapply" class="slide section level1">
-<h1>Data manipulation - <em>gapply</em></h1>
+<div id="data-manipulation-case-study---gapply" class="slide section level1">
+<h1>Data manipulation case study - <em>gapply</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## gapply, gapplyCollect
 schema &lt;-<span class="st"> </span><span class="kw">structType</span>(
   <span class="kw">structField</span>(<span class="st">'class'</span>, <span class="st">'string'</span>),
@@ -271,8 +277,8 @@ df <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">gappl
 <li>note <code>nrow()</code> is not base R function</li>
 </ul>
 </div>
-<div id="data-manipulation---sql" class="slide section level1">
-<h1>Data manipulation - <em>SQL</em></h1>
+<div id="data-manipulation-case-study---sql" class="slide section level1">
+<h1>Data manipulation case study - <em>sql</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## sql queries
 <span class="kw">createOrReplaceTempView</span>(df, <span class="st">'titanic_tbl'</span>)
 
@@ -291,8 +297,8 @@ qry &lt;-<span class="st"> '</span>
 <li>do we need <a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual">HiveQL</a>?</li>
 </ul>
 </div>
-<div id="data-manipulation---spark.lapply" class="slide section level1">
-<h1>Data manipulation - <em>spark.lapply</em></h1>
+<div id="data-manipulation-case-study---spark.lapply" class="slide section level1">
+<h1>Data manipulation case study - <em>spark.lapply</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## spark.lapply
 discnt &lt;-<span class="st"> </span>tdf <span class="op">%&gt;%</span><span class="st"> </span>dplyr<span class="op">::</span><span class="kw">distinct</span>(class, age)
 lst &lt;-<span class="st"> </span><span class="kw">lapply</span>(<span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(discnt), <span class="cf">function</span>(i) {
@@ -587,8 +593,8 @@ dat <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">sele
 <span class="dv">5</span>       no         <span class="dv">1</span>       <span class="dv">1</span>          <span class="dv">1</span>       <span class="dv">1</span>
 <span class="dv">6</span>       no        <span class="dv">10</span>       <span class="dv">1</span>          <span class="dv">2</span>       <span class="dv">1</span></code></pre></div>
 </div>
-<div id="machine-learning---fit-model" class="slide section level1">
-<h1>Machine Learning - <em>fit model</em></h1>
+<div id="machine-learning---model-fitting" class="slide section level1">
+<h1>Machine Learning - <em>model fitting</em></h1>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dat_split &lt;-<span class="st"> </span><span class="kw">randomSplit</span>(dat, <span class="dt">weights =</span> <span class="kw">c</span>(<span class="fl">0.7</span>, <span class="fl">0.3</span>), seed)
 train &lt;-<span class="st"> </span>dat_split[[<span class="dv">1</span>]]
 test &lt;-<span class="st"> </span>dat_split[[<span class="dv">2</span>]]
@@ -769,6 +775,14 @@ hpreds_up &lt;-<span class="st"> </span><span class="kw">bind_cols</span>(hpreds
 ## 7        14        19       no        yes</code></pre>
 <ul>
 <li>what causes high <em>dep_delay</em> but low <em>arr_delay</em>, and vice versa??</li>
+</ul>
+</div>
+<div id="further-topics---to-do" class="slide section level1">
+<h1>Further topics - <em>TO DO</em></h1>
+<ul>
+<li>Hive</li>
+<li>SparkR vs sparklyr</li>
+<li>Production env - <em>EMR</em></li>
 </ul>
 </div>
 

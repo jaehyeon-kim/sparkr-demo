@@ -20,7 +20,11 @@ cmat <- readr::read_csv('./flight-present/cmat.csv') %>% as.data.frame()
 importance <- readr::read_csv('./flight-present/importance.csv')
 ```
 
-# Data manipulation - _load DataFrame_
+# Intro to Spark, Docker, Dev env
+
+- TO DO
+
+# Intro to data manipulation - _load data_
 
 ```{r titanic_01, eval=FALSE}
 Sys.setenv('JAVA_HOME'='/usr/lib/jvm/java-8-openjdk-amd64')
@@ -52,7 +56,7 @@ root
  |-- survived: string (nullable = true)
 ```
 
-# Data manipulation - _check data_
+# Intro to data manipulation - _check data_
 
 ```{r titanic_02, eval=FALSE}
 ## more functions
@@ -78,7 +82,7 @@ df %>% class() # SparkDataFrame
 df %>% head() %>% class() # data.frame
 ```
 
-# Data manipulation - _select, filter..._
+# Intro to data manipulation - _select, filter..._
 
 ```{r titanic_03, eval=FALSE}
 ## column expressions
@@ -106,7 +110,7 @@ tdf %>% dplyr::filter(survived == 'yes' & age == 'child') %>% head()
 - expressions are interchangeable but not always - see _dapply_ section
 - `expr()` is more expressive - see ML section
 
-# Data manipulation - _group_by, mutate ..._
+# Intro to data manipulation - _group_by, mutate ..._
 
 ```{r titanic_04, eval=FALSE}
 ## creating variable
@@ -135,7 +139,7 @@ tdf %>% dplyr::group_by(class, age) %>%
   dplyr::summarise(count = n())
 ```
 
-# Data manipulation - _join_
+# Intro to data manipulation - _join_
 
 ```{r titanic_05, eval=FALSE}
 rdf <- data.frame(age = c('adult', 'child'), lvl = c('0', '1'), stringsAsFactors = FALSE)
@@ -164,7 +168,7 @@ tdf %>% dplyr::inner_join(rdf, by = 'age') %>%
     + default - inner
     + inner, cross, outer, full, full_outer, left, left_outer, right, right_outer, left_semi, or left_anti
 
-# Data manipulation - _example_
+# Data manipulation case study
 
 ```{r titanic_06, eval=FALSE}
 tmp <- df %>% group_by('class', 'age') %>%
@@ -191,7 +195,7 @@ tdf %>% dplyr::group_by(class, age) %>%
     + temporary DF is created
 - 4 ways to achieve without a temp DF
 
-# Data manipulation - _dapply_
+# Data manipulation case study - _dapply_
 
 ```{r titanic_07, eval=FALSE}
 ## dapply, dapplyCollect
@@ -217,7 +221,7 @@ df %>% group_by('class', 'age') %>%
 - note `expr()`/_string_ don't work in the function
 - will be more efficient if applied to a grouped data
 
-# Data manipulation - _gapply_
+# Data manipulation case study - _gapply_
 
 ```{r titanic_08, eval=FALSE}
 ## gapply, gapplyCollect
@@ -239,7 +243,7 @@ df %>% gapply(cols = c('class', 'age'), func = fn, schema = schema) %>%
 - `dapply()` - apply a function to each partition of a grouped _SparkDataFrame_
 - note `nrow()` is not base R function
 
-# Data manipulation - _SQL_
+# Data manipulation case study - _sql_
 
 ```{r titanic_09, eval=FALSE}
 ## sql queries
@@ -260,7 +264,7 @@ sql(qry) %>% collect()
 - [window functions](https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html) introduced in Spark 2
 - do we need [HiveQL](https://cwiki.apache.org/confluence/display/Hive/LanguageManual)?
 
-# Data manipulation - _spark.lapply_
+# Data manipulation case study - _spark.lapply_
 
 ```{r titanic_10, eval=FALSE}
 ## spark.lapply
@@ -477,7 +481,7 @@ dat %>% select(sel_cols) %>% head()
 6       no        10       1          2       1
 ```
 
-# Machine Learning - _fit model_
+# Machine Learning - _model fitting_
 
 ```{r flight_07, eval=FALSE}
 dat_split <- randomSplit(dat, weights = c(0.7, 0.3), seed)
@@ -590,3 +594,9 @@ hpreds_up %>% dplyr::filter(is_delay != prediction) %>%
 ```
 
 - what causes high *dep_delay* but low *arr_delay*, and vice versa??
+
+# Further topics - _TO DO_
+
+- Hive
+- SparkR vs sparklyr
+- Production env - _EMR_
