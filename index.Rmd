@@ -22,17 +22,25 @@ importance <- readr::read_csv('./flight-present/importance.csv')
 
 # Intro to Spark
 
+<p style="text-align:center;"><img src="./images/spark-stack.jpg" height="350" width="500" align="middle"/></p>
+
 - to do
 
 # Intro to SparkR
 
-- to do
-
-# Intro to Docker
+<p style="text-align:center;"><img src="./images/sparkr-arch.png" height="350" width="500" align="middle"/></p>
 
 - to do
 
-# Intro to dev env
+# Intro to Docker / Rocker
+
+<p style="text-align:center;"><img src="./images/docker-layer.png" height="350" width="500" align="middle"/></p>
+
+- to do
+
+# Intro to development environment
+
+<p style="text-align:center;"><img src="./images/dev-env.png" height="350" width="500" align="middle"/></p>
 
 - to do
 
