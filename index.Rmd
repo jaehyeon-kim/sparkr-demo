@@ -20,9 +20,21 @@ cmat <- readr::read_csv('./flight-present/cmat.csv') %>% as.data.frame()
 importance <- readr::read_csv('./flight-present/importance.csv')
 ```
 
-# Intro to Spark, Docker, Dev env
+# Intro to Spark
 
-- TO DO
+- to do
+
+# Intro to SparkR
+
+- to do
+
+# Intro to Docker
+
+- to do
+
+# Intro to dev env
+
+- to do
 
 # Intro to data manipulation - _load data_
 
