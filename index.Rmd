@@ -22,9 +22,9 @@ importance <- readr::read_csv('./flight-present/importance.csv')
 
 # Intro to Spark
 
-<p style="text-align:center;"><img src="./images/spark-stack.jpg" height="350" width="500" align="middle"/></p>
+<p style="text-align:center;"><img src="./images/spark-stack.png" height="350" width="500" align="middle"/></p>
 
-- to do
+- Apache Spark™ is a fast and general engine for large-scale data processing.
 
 # Intro to SparkR
 

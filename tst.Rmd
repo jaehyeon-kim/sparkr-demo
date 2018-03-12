@@ -1,0 +1,43 @@
+---
+title: "SparkR Demo Test"
+author: Jaehyeon kim
+date: March 14, 2018
+output: slidy_presentation
+---
+
+# Intro to Spark
+
+<p style="text-align:center;">
+  <img src="./images/spark-stack.png" height="350" width="500" align="middle"/>
+  <br>
+  <sub>Source: <a href="https://databricks.com/spark/about">Apache Spark Ecosystem</a></sub>
+</p>
+
+- [Apache Spark™](https://spark.apache.org/) is a fast and general engine for large-scale data processing
+    + built around speed, ease of use, scalable, fault tolerant ...
+- Main focus is Spark SQL, DataFrame and MLlib
+
+# Intro to SparkR
+
+<p style="text-align:center;">
+  <img src="./images/sparkr-arch.png" height="350" width="500" align="middle"/>
+  <br>
+  <sub>Source: <a href="https://people.csail.mit.edu/matei/papers/2016/sigmod_sparkr.pdf">SparkR: Scaling R Programs with Spark
+</a></sub>
+</p>
+
+- Central component of _SparkR_ is a distributed data frame implemented on top of Spark
+    + SparkR DataFrames scale to large datasets using Spark's execution engine and relational query optimizer
+- R to JVM binding on the driver allows R programs to submit jobs to a Spark cluster and support for running R on the Spark executors (workers)
+
+# Intro to Docker / Rocker
+
+<p style="text-align:center;"><img src="./images/docker-layer.png" height="350" width="500" align="middle"/></p>
+
+- to do
+
+# Intro to development environment
+
+<p style="text-align:center;"><img src="./images/dev-env.png" height="350" width="500" align="middle"/></p>
+
+- to do
