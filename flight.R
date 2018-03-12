@@ -114,7 +114,7 @@ model <- read.ml('s3n://sparkr-demo/model/flight_2007_rf.model')
 preds <- predict(model, test)
 
 hpreds <- preds %>% head(50) %>%
-  dplyr::select(arr_delay, dep_delay, is_delay, prediction, probability, rawPrediction) %>%
+  dplyr::select(is_delay, prediction, probability, rawPrediction) %>%
   dplyr::rename(prob = probability, raw_pred = rawPrediction)
 
 hpreds_up <- bind_cols(hpreds,

@@ -22,27 +22,120 @@ importance <- readr::read_csv('./flight-present/importance.csv')
 
 # Intro to Spark
 
-<p style="text-align:center;"><img src="./images/spark-stack.png" height="350" width="500" align="middle"/></p>
+<p style="text-align:center;">
+  <img src="./images/spark-stack.png" height="350" width="500" align="middle"/>
+  <br>
+  <sub>Source: <a href="https://databricks.com/spark/about">Apache Spark Ecosystem</a></sub>
+</p>
 
-- Apache Spark™ is a fast and general engine for large-scale data processing.
+- [Apache Spark™](https://spark.apache.org/) is a fast and general engine for large-scale data processing
+    + built around speed, ease of use, scalable, fault tolerant ...
+- Main focus is Spark SQL, DataFrame and MLlib
+    + Spark SQL allows to execute SQL queries or to read data from an existing Hive installation
+    + DataFrame is immutable distributed collection of data, organized into named columns
+        * conceptually equivalent to a table in a relational database or a data frame in R/Python
+        * returned when running SQL from another programming language
+    + [ML algorithms since Spark 1.5](https://databricks.com/blog/2015/10/05/generalized-linear-models-in-sparkr-and-r-formula-support-in-mllib.html)
 
 # Intro to SparkR
 
-<p style="text-align:center;"><img src="./images/sparkr-arch.png" height="350" width="500" align="middle"/></p>
+<p style="text-align:center;">
+  <img src="./images/sparkr-arch.png" height="350" width="500" align="middle"/>
+  <br>
+  <sub>Source: <a href="https://people.csail.mit.edu/matei/papers/2016/sigmod_sparkr.pdf">SparkR: Scaling R Programs with Spark
+</a></sub>
+</p>
 
-- to do
+- Central component of _SparkR_ is a distributed data frame implemented on top of Spark
+    + SparkR DataFrames scale to large datasets using Spark's execution engine and relational query optimizer
+- R to JVM binding on the driver allows R programs to submit jobs to a Spark cluster and support for running R on the Spark executors (workers)
 
-# Intro to Docker / Rocker
+```
+Launching java with spark-submit command /usr/local/spark-2.2.1/bin/spark-submit
+  sparkr-shell /tmp/RtmpfVHcxh/backend_port37123e7eb08
+```
+
+# Intro to Docker
 
 <p style="text-align:center;"><img src="./images/docker-layer.png" height="350" width="500" align="middle"/></p>
 
-- to do
+- [Docker](https://docs.docker.com/) is a virtualization tool designed to make it easier to create, deploy, and run applications by using containers
+    + Applications can use the same Linux kernel as the host system and ship with things that don't exist on the system - significant performance boost and smaller application size
+    + Available on all major OS - some limitations on Windows
+    + [Dockerfile](https://github.com/jaehyeon-kim/rocker-extra/blob/3.4.3/spark/Dockerfile) - set of instructions on how to build a Docker image
+    + If interested, [The Docker Book](https://www.dockerbook.com/) (ch 1 - 4 and part of ch 7 (docker compose))
+- [Rocker project](https://github.com/rocker-org) is a de facto standard of Docker-based application development with R (also in [DockerHub](https://hub.docker.com/r/rocker/))
 
 # Intro to development environment
 
 <p style="text-align:center;"><img src="./images/dev-env.png" height="350" width="500" align="middle"/></p>
 
-- to do
+- [Docker Compose](https://docs.docker.com/compose/overview/) is a tool for defining and running multi-container Docker applications
+    + Create: `docker-compose up -d --scale worker=6`
+    + Stop: `docker-compose stop`
+    + Start: `docker-compose start`
+    + Terminate: `docker-compose rm -f` (after stop)
+- Note
+    + Both RStudio and Spark Cluster are managed by [s6-overlay-builder](https://github.com/just-containers/s6-overlay) project
+    + Add AWS credentials in [core-site.xml](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/hadoop-conf/core-site.xml) and copy to `$HADOOP_CONF_DIR`
+    + Sources are available in the [project GitHub](https://github.com/jaehyeon-kim/sparkr-demo)
+
+[docker-compose.yml](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/docker-compose.yml)
+
+```
+version: "2"
+
+services:
+  master:
+    build:
+        context: .
+        dockerfile: Dockerfile-master
+    command: /init
+    hostname: master
+    ports:
+      - "6066:6066"
+      - "7070:7070"
+      - "8080:8080"
+      - "50070:50070"
+      - "8787:8787"
+  worker:
+    build:
+        context: .
+        dockerfile: Dockerfile-worker
+    command: /init
+    environment:
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 2g
+    links:
+      - master
+```
+
+[Dockerfile-master](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/Dockerfile-master)
+
+```
+FROM rockerextra/spark:3.4.3
+MAINTAINER Jaehyeon Kim <dottami@gmail.com>
+
+RUN mkdir -p /etc/services.d/spark-master \
+    && echo '#!/usr/bin/with-contenv sh \n /opt/util/bin/start-spark master' > /etc/services.d/spark-master/run
+
+# add AWS credentials
+COPY ./hadoop-conf/*.xml $HADOOP_CONF_DIR/
+```
+
+[Dockerfile-worker](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/Dockerfile-worker)
+
+```
+FROM rockerextra/spark:3.4.3
+MAINTAINER Jaehyeon Kim <dottami@gmail.com>
+
+RUN rm -rf /etc/services.d/rstudio \
+    && mkdir -p /etc/services.d/spark-worker \
+    && echo '#!/usr/bin/with-contenv sh \n /opt/util/bin/start-spark worker master' > /etc/services.d/spark-worker/run
+
+# add AWS credentials
+COPY ./hadoop-conf/*.xml $HADOOP_CONF_DIR/
+```
 
 # Intro to data manipulation - _load data_
 
@@ -413,9 +506,23 @@ dat_s <- dat_s %>%
 - *month*, *weekday*, *is_weekend*, *dep_hour*, *arr_hour* and *is_delay* are created 
 - take only if not cancelled (*cancelled == 0*)
 
-```{r flight_04, message=FALSE, error=FALSE, warning=FALSE}
-dat_s %>% select(-unique_carrier, -origin, -dest) %>%
-  head() %>% knitr::kable(row.names = FALSE)
+```{r flight_04, , eval=FALSE}
+dat_s %>% select(-unique_carrier, -origin, -dest) %>% head()
+
+# A tibble: 727,530 x 13
+   unique_carrier air_time arr_delay dep_delay origin dest  distance month weekday is_weekend dep_hour arr_hour is_delay
+   <chr>             <int>     <int>     <int> <chr>  <chr>    <int> <int> <fct>        <dbl>    <dbl>    <dbl> <chr>   
+ 1 CO                  232      -  2         6 PHX    EWR       2133     1 Mon              0        0     6.00 no      
+ 2 YV                   80        16         8 LAS    ELP        584     1 Mon              0        0     2.00 yes     
+ 3 US                   59        16         8 LAS    SFO        414     1 Mon              0        0     1.00 yes     
+ 4 B6                   75       137       153 JFK    CMH        483     1 Mon              0        0     2.00 yes     
+ 5 US                   67        31        19 LAS    ABQ        487     1 Mon              0        0     2.00 yes     
+ 6 WN                  115       189       207 FLL    BWI        925     1 Mon              0        0     2.00 yes     
+ 7 YV                   64        39        26 LAS    SLC        368     1 Mon              0        0     2.00 yes     
+ 8 UA                  199        44        21 SEA    ORD       1721     1 Mon              0        0     6.00 yes     
+ 9 US                   60        22        21 LAS    OAK        407     1 Mon              0        0     1.00 yes     
+10 AA                  165       200       204 LGA    MIA       1097     1 Mon              0        0     3.00 yes     
+# ... with 727,520 more rows
 ```
 
 # Machine Learning - _data exploration ctd_
@@ -527,19 +634,22 @@ model <- spark.randomForest(train, formula, 'classification')
 preds <- predict(model, test)
 
 hpreds <- preds %>% head(50) %>%
-  dplyr::select(is_delay, prediction, probability, rawPrediction) %>%
+  dplyr::select(probability, rawPrediction) %>%
   dplyr::rename(prob = probability, raw_pred = rawPrediction)
 
-hpreds %>% head(2)
+hpreds %>% head()
 
-  arr_delay dep_delay is_delay prediction                      prob                 raw_pred
-1        32        16      yes         no <environment: 0x10a7ee68> <environment: 0x66e4540>
-2        94        76      yes        yes <environment: 0x109fe4a8> <environment: 0x66dc4e0>
-3        16         7      yes         no <environment: 0x108efe08> <environment: 0x66d5be0>
-4        -4        -6       no         no <environment: 0x108bf320> <environment: 0x66ccc00>
-5         7        10       no         no <environment: 0x10885cb0> <environment: 0x66c6568>
-6         3        10       no         no  <environment: 0xda75398> <environment: 0x66a7178>
+  is_delay prediction                     prob                 raw_pred
+1      yes         no <environment: 0x5e7dfd8> <environment: 0x6cda460>
+2      yes        yes <environment: 0x5e769a0> <environment: 0x6cdfe88>
+3      yes         no <environment: 0x5e6ce68> <environment: 0x6ce78c8>
+4       no         no <environment: 0x5e65460> <environment: 0x6cee580>
+5       no         no <environment: 0x5e5dca0> <environment: 0x6cf5280>
+6       no         no <environment: 0x5e55c28> <environment: 0x6cfaf20>
 ```
+
+- `probability` and `rawPrediction` are not [serializable types](https://spark.apache.org/docs/latest/sparkr.html#data-type-mapping-between-r-and-spark)
+- they have to be obtained from `org.apache.spark.mllib.linalg.DenseVector` - [further details](https://stackoverflow.com/questions/38031987/sparkr-1-6-how-to-predict-probability-when-modeling-with-glm-binomial-family)
 
 # Machine Learning - _model evaluation ctd_
 
@@ -563,7 +673,7 @@ hpreds_up <- bind_cols(hpreds,
 ```
 
 ```{r flight_09_2, message=FALSE, error=FALSE, warning=FALSE}
-hpreds_up %>% head() %>% knitr::kable(row.names = FALSE)
+hpreds_up %>% head()
 ```
 
 # Machine Learning - _model evaluation ctd_
@@ -606,17 +716,22 @@ get_feat_importance <- function(model) {
 }
 ```
 
-# Machine Learning - _model evaluation ctd_
+# Further topics
 
-```{r flight_12, message=FALSE, error=FALSE, warning=FALSE}
-hpreds_up %>% dplyr::filter(is_delay != prediction) %>%
-  dplyr::select(arr_delay, dep_delay, is_delay, prediction)
-```
-
-- what causes high *dep_delay* but low *arr_delay*, and vice versa??
-
-# Further topics - _TO DO_
-
-- Hive
-- SparkR vs sparklyr
-- Production env - _EMR_
+- Hive UDF
+    + [Hive UDFs](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF) can be run alongside Spark SQL
+    + [Spark should be built with Hive](http://jaehyeon-kim.github.io/2016/04/Boost-SparkR-with-Hive.html)
+- [sparklyr](https://spark.rstudio.com/)
+    + has a complete dplyr backend, [too tight integration?](http://spark.rstudio.com/#using-sql)
+    + has more features for data analysis
+        * [feature transformers](https://spark.rstudio.com/mlib/#transformers) vs [one-hot encoding and a few more](https://databricks.com/blog/2015/10/05/generalized-linear-models-in-sparkr-and-r-formula-support-in-mllib.html)
+    + deprecated way of creating Spark session
+        * not sure if SparkR and sparklyr can be used side by side
+- Production environment
+    + [Amazon EMR](https://aws.amazon.com/emr/)
+        * managed Hadoop framework on AWS
+        * [automatic scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
+        * [instance fleets](https://aws.amazon.com/blogs/aws/new-amazon-emr-instance-fleets/)
+    + Other options
+        + [amplab/spark-ec2](https://github.com/amplab/spark-ec2/) - no longer maintained
+        + [Flintrock](https://github.com/nchammas/flintrock) - currently undergoing heavy development
