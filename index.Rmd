@@ -78,7 +78,7 @@ Launching java with spark-submit command /usr/local/spark-2.2.1/bin/spark-submit
 - Note
     + Both [RStudio](https://github.com/rocker-org/rocker-versioned/blob/master/rstudio/Dockerfile#L63) and Spark Cluster are managed by [s6-overlay](https://github.com/just-containers/s6-overlay)
     + Add AWS credentials in [core-site.xml](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/hadoop-conf/core-site.xml) and copy to `$HADOOP_CONF_DIR`
-    + Spark [log level](https://github.com/jaehyeon-kim/rocker-extra/blob/3.4.3/spark/spark-conf/log4j.properties#L19) to _WARN_ - too many info message can cause RStudio unresponsive
+    + Spark [log level](https://github.com/jaehyeon-kim/rocker-extra/blob/3.4.3/spark/spark-conf/log4j.properties#L19) to _WARN_ - too many info messages can cause RStudio unresponsive
 - Sources are available in the [project GitHub](https://github.com/jaehyeon-kim/sparkr-demo)
 
 [docker-compose.yml](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/docker-compose.yml)
