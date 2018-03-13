@@ -1,6 +1,6 @@
 ---
 title: "SparkR Demo"
-author: Jaehyeon kim
+author: Jaehyeon Kim
 date: March, 2018
 output: slidy_presentation
 ---
@@ -76,9 +76,10 @@ Launching java with spark-submit command /usr/local/spark-2.2.1/bin/spark-submit
     + Start: `docker-compose start`
     + Terminate: `docker-compose rm -f` (after stop)
 - Note
-    + Both RStudio and Spark Cluster are managed by [s6-overlay-builder](https://github.com/just-containers/s6-overlay) project
+    + Both [RStudio](https://github.com/rocker-org/rocker-versioned/blob/master/rstudio/Dockerfile#L63) and Spark Cluster are managed by [s6-overlay](https://github.com/just-containers/s6-overlay)
     + Add AWS credentials in [core-site.xml](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/hadoop-conf/core-site.xml) and copy to `$HADOOP_CONF_DIR`
-    + Sources are available in the [project GitHub](https://github.com/jaehyeon-kim/sparkr-demo)
+    + Spark [log level](https://github.com/jaehyeon-kim/rocker-extra/blob/3.4.3/spark/spark-conf/log4j.properties#L19) to _WARN_ - too many info message can cause RStudio unresponsive
+- Sources are available in the [project GitHub](https://github.com/jaehyeon-kim/sparkr-demo)
 
 [docker-compose.yml](https://github.com/jaehyeon-kim/sparkr-demo/blob/master/docker-compose/docker-compose.yml)
 
@@ -279,7 +280,16 @@ tdf %>% dplyr::inner_join(rdf, by = 'age') %>%
     + default - inner
     + inner, cross, outer, full, full_outer, left, left_outer, right, right_outer, left_semi, or left_anti
 
-# Data manipulation case study
+# Data manipulation case study - _intro_
+
+<p style="text-align:center;">
+  <img src="./images/case-study.png" height="450" width="700" align="middle"/>
+</p>
+
+- want to obtain _count_ and _prop_ by _class_ and _age_
+- 5 ways to achieve the same output
+
+# Data manipulation case study - _multiple transformations_
 
 ```{r titanic_06, eval=FALSE}
 tmp <- df %>% group_by('class', 'age') %>%
@@ -287,24 +297,15 @@ tmp <- df %>% group_by('class', 'age') %>%
 tmp %>% mutate(prop = expr('count') / rec) %>% 
   arrange('class', 'age') %>% collect()
 
-   class   age count        prop                                                
-1   crew adult   885 0.402089959
-2  first adult   319 0.144934121
-3  first child     6 0.002726034
-4 second adult   261 0.118582463
-5 second child    24 0.010904134
-6  third adult   627 0.284870513
-7  third child    79 0.035892776
 
 tdf %>% dplyr::group_by(class, age) %>%
   dplyr::summarise(count = n()) %>% 
   dplyr::mutate(prop = count / rec)
 ```
 
-- want to obtain _count_ and _prop_ by _class_ and _age_
 - unlike _dplyr_, not possible to refer to a column that's created in a chain
     + temporary DF is created
-- 4 ways to achieve without a temp DF
+- [transformations](https://spark.apache.org/docs/latest/rdd-programming-guide.html#transformations) vs [actions](https://spark.apache.org/docs/latest/rdd-programming-guide.html#actions)
 
 # Data manipulation case study - _dapply_
 
@@ -351,7 +352,7 @@ df %>% gapply(cols = c('class', 'age'), func = fn, schema = schema) %>%
   arrange('class', 'age') %>% collect()
 ```
 
-- `dapply()` - apply a function to each partition of a grouped _SparkDataFrame_
+- `gapply()` - apply a function to each partition of a grouped _SparkDataFrame_
 - note `nrow()` is not base R function
 
 # Data manipulation case study - _sql_
@@ -414,7 +415,10 @@ library(tibble)
 library(dplyr)
 library(SparkR, lib.loc=file.path(Sys.getenv('SPARK_HOME'),'R', 'lib'))
 
+source('utils.R')
+seed <- 1237
 ext_opts <- '-Dhttp.proxyHost=10.74.1.25 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=10.74.1.25 -Dhttps.proxyPort=8080'
+
 sparkR.session(master = "spark://master:7077",
                appName = 'ml demo',
                sparkConfig = list(spark.driver.memory = '2g'), 
@@ -478,10 +482,12 @@ source [Data expo '09](http://stat-computing.org/dataexpo/2009/the-data.html)
 
 # Machine Learning - _data exploration_
 
-```{r flight_03, message=FALSE, error=FALSE, warning=FALSE}
-# dat_s <- randomSplit(dat, weights = c(0.1, 0.9), seed)[[1]] %>%
-#   collect() %>% as.tibble()
-# readr::write_csv(dat_s, './flight-dat/flight_2007_10p.csv')
+```{r flight_03_1, eval=FALSE}
+dat_s <- randomSplit(dat, weights = c(0.1, 0.9), seed)[[1]] %>%
+  collect() %>% as.tibble()
+```
+
+```{r flight_03_2, message=FALSE, error=FALSE, warning=FALSE}
 dat_s <- dat_s %>% 
   dplyr::filter(!is.na(arr_delay) & !is.na(dep_delay)) %>%
   dplyr::mutate(
@@ -617,7 +623,7 @@ formula <- 'is_delay ~ dep_delay + month_c + dep_hour_c + weekday' %>%
   as.formula()
 
 model <- spark.randomForest(train, formula, 'classification')
-
+## writing/loading model
 # write.ml(model, 's3n://sparkr-demo/model/flight_2007_rf.model')
 # model <- read.ml('s3n://sparkr-demo/model/flight_2007_rf.model')
 ```
@@ -632,7 +638,7 @@ model <- spark.randomForest(train, formula, 'classification')
 preds <- predict(model, test)
 
 hpreds <- preds %>% head(50) %>%
-  dplyr::select(probability, rawPrediction) %>%
+  dplyr::select(is_delay, prediction, probability, rawPrediction) %>%
   dplyr::rename(prob = probability, raw_pred = rawPrediction)
 
 hpreds %>% head()
@@ -647,7 +653,8 @@ hpreds %>% head()
 ```
 
 - `probability` and `rawPrediction` are not [serializable types](https://spark.apache.org/docs/latest/sparkr.html#data-type-mapping-between-r-and-spark)
-- they have to be obtained from `org.apache.spark.mllib.linalg.DenseVector` - [further details](https://stackoverflow.com/questions/38031987/sparkr-1-6-how-to-predict-probability-when-modeling-with-glm-binomial-family)
+    + they have to be obtained from `org.apache.spark.mllib.linalg.DenseVector` - [further details](https://stackoverflow.com/questions/38031987/sparkr-1-6-how-to-predict-probability-when-modeling-with-glm-binomial-family)
+- [rawPrediction](https://stackoverflow.com/questions/37903288/what-do-colum-rawprediction-and-probability-of-dataframe-mean-in-spark-mllib) intuitively gives a measure of confidence in each possible label (where larger = more confident)
 
 # Machine Learning - _model evaluation ctd_
 

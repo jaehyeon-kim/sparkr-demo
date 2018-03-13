@@ -1,4 +1,6 @@
+#
 # Intro to data manipulation - _load data_
+#
 
 Sys.setenv('JAVA_HOME'='/usr/lib/jvm/java-8-openjdk-amd64')
 Sys.setenv('HADOOP_HOME'='/usr/local/hadoop-2.8.2')
@@ -19,8 +21,9 @@ df %>% head(2)
 printSchema(df)
 
 
-
+#
 # Data manipulation - _check data_
+#
 
 ## more functions
 str(df)
@@ -34,8 +37,9 @@ df %>% class() # SparkDataFrame
 df %>% head() %>% class() # data.frame
 
 
-
+#
 # Data manipulation - _select, filter..._
+#
 
 ## column expressions
 df$survived # Column survived
@@ -56,14 +60,10 @@ df %>% filter(df$survived == 'yes' & df$age == 'child') %>% head()
 
 tdf %>% dplyr::filter(survived == 'yes' & age == 'child') %>% head()
 
-# - many function names are same to _dplyr_
-#     + use `::` for calling them
-# - expressions are interchangeable but not always - see _dapply_ section
-# - `expr()` is more expressive - see ML section
 
-
-
+#
 # Data manipulation - _group_by, mutate ..._
+#
 
 ## creating variable
 df %>% mutate(age_c = ifelse(expr('age') == 'adult', '1', '0')) %>% 
@@ -78,8 +78,9 @@ tdf %>% dplyr::group_by(class, age) %>%
   dplyr::summarise(count = n())
 
 
-
+#
 # Data manipulation - _join_
+#
 
 rdf <- data.frame(age = c('adult', 'child'), lvl = c('0', '1'), stringsAsFactors = FALSE)
 rDF <- as.DataFrame(rdf)
@@ -93,66 +94,52 @@ tdf %>% dplyr::inner_join(rdf, by = 'age') %>%
   dplyr::group_by(class, lvl) %>%
   dplyr::summarise(count = n())
 
-# * _joinType_
-# + default - inner
-# + inner, cross, outer, full, full_outer, left, left_outer, right, right_outer, left_semi, or left_anti
 
+#
+# Data manipulation case study - _intro_
+#
 
-
-# Data manipulation - _example_
+#
+# Data manipulation case study - _multiple transformations_
+#
 
 tmp <- df %>% group_by('class', 'age') %>%
   summarize(count = n(expr('survived')))
 tmp %>% mutate(prop = expr('count') / rec) %>% 
   arrange('class', 'age') %>% collect()
 
-#    class   age count        prop                                                
-# 1   crew adult   885 0.402089959
-# 2  first adult   319 0.144934121
-# 3  first child     6 0.002726034
-# 4 second adult   261 0.118582463
-# 5 second child    24 0.010904134
-# 6  third adult   627 0.284870513
-# 7  third child    79 0.035892776
 
 tdf %>% dplyr::group_by(class, age) %>%
   dplyr::summarise(count = n()) %>% 
   dplyr::mutate(prop = count / rec)
 
-# - want to obtain _count_ and _prop_ by _class_ and _age_
-# - unlike _dplyr_, not possible to refer to a column that's created in a chain
-#    + temporary DF is created
-# - 4 ways to achieve without a temp DF
 
-
-
+#
 # Data manipulation - _dapply_
+#
 
 ## dapply, dapplyCollect
 schema <- structType(
-structField('class', 'string'),
-structField('age', 'string'),
-structField('count', 'double'), # not integer
-structField('prop', 'double')
+  structField('class', 'string'),
+  structField('age', 'string'),
+  structField('count', 'double'), # not integer
+  structField('prop', 'double')
 )
 
 fn <- function(x) {
-cbind(x, x$count / rec) # expr() not working
+  cbind(x, x$count / rec) # expr() not working
 }
 
 # may take more time but no temporary DF
 df %>% group_by('class', 'age') %>%
-summarize(count = n(expr('survived'))) %>%
-dapply(fn, schema) %>%
-arrange('class', 'age') %>% collect()
-
-# - `dapply()` - apply a function to each partition of a _SparkDataFrame_
-# - note `expr()`/_string_ don't work in the function
-# - will be more efficient if applied to a grouped data
+  summarize(count = n(expr('survived'))) %>%
+  dapply(fn, schema) %>%
+  arrange('class', 'age') %>% collect()
 
 
-
+#
 # Data manipulation - _gapply_
+#
 
 ## gapply, gapplyCollect
 schema <- structType(
@@ -169,12 +156,10 @@ fn <- function(key, x) {
 df %>% gapply(cols = c('class', 'age'), func = fn, schema = schema) %>%
   arrange('class', 'age') %>% collect()
 
-# - `dapply()` - apply a function to each partition of a grouped _SparkDataFrame_
-# - note `nrow()` is not base R function
 
-
-
+#
 # Data manipulation - _SQL_
+#
 
 ## sql queries
 createOrReplaceTempView(df, 'titanic_tbl')
@@ -189,14 +174,11 @@ qry <- '
 
 sql(qry) %>% collect()
 
-# - SQL can be applied after creating/replacing a temporary view
-# - [window functions](https://databricks.com/blog/2015/07/15/introducing-window-functions-in-spark-sql.html) introduced in Spark 2
-# - do we need [HiveQL](https://cwiki.apache.org/confluence/display/Hive/LanguageManual)?
 
-
-  
+#  
 # Data manipulation - _spark.lapply_
-  
+# 
+ 
 ## spark.lapply
 discnt <- tdf %>% dplyr::distinct(class, age)
 lst <- lapply(1:nrow(discnt), function(i) {
@@ -216,5 +198,3 @@ spark.lapply(lst, fn) %>%
   bind_rows() %>%
   dplyr::arrange(class, age)
 
-# - run non-SparkR functions over a list of elements and distributes the computations with Spark
-# - limitation - results of all the computations should fit in a single machine
