@@ -1,7 +1,7 @@
 ---
 title: "SparkR Demo"
 author: Jaehyeon kim
-date: March 14, 2018
+date: March, 2018
 output: slidy_presentation
 ---
 
@@ -47,7 +47,7 @@ importance <- readr::read_csv('./flight-present/importance.csv')
 </p>
 
 - Central component of _SparkR_ is a distributed data frame implemented on top of Spark
-    + SparkR DataFrames scale to large datasets using Spark's execution engine and relational query optimizer
+    + SparkR DataFrames scale to large datasets using Spark's execution engine and relational [query optimizer](https://databricks.com/blog/2015/04/13/deep-dive-into-spark-sqls-catalyst-optimizer.html)
 - R to JVM binding on the driver allows R programs to submit jobs to a Spark cluster and support for running R on the Spark executors (workers)
 
 ```
@@ -149,12 +149,10 @@ library(SparkR, lib.loc=file.path(Sys.getenv('SPARK_HOME'),'R', 'lib'))
 sparkR.session(master = 'spark://master:7077', appName = 'titanic demo',
                sparkConfig = list(spark.driver.memory = '2g'))
 
-set.seed(1237)
-titanic <- read.csv('titanic.csv', stringsAsFactors = FALSE) %>%
-  dplyr::sample_frac(1, replace = FALSE)
-rec <- nrow(titanic)
-df <- as.DataFrame(titanic)
-tdf <- as.tibble(titanic)
+tdf <- read.csv('titanic.csv', stringsAsFactors = FALSE) %>%
+  dplyr::sample_frac(1, replace = FALSE) %>% as.tibble()
+rec <- nrow(tdf)
+df <- as.DataFrame(tdf)
 
 df %>% head(2)
   class   age  sex survived

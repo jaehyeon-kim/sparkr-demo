@@ -1,4 +1,4 @@
-# Data manipulation - _load DataFrame_
+# Intro to data manipulation - _load data_
 
 Sys.setenv('JAVA_HOME'='/usr/lib/jvm/java-8-openjdk-amd64')
 Sys.setenv('HADOOP_HOME'='/usr/local/hadoop-2.8.2')
@@ -9,24 +9,14 @@ library(SparkR, lib.loc=file.path(Sys.getenv('SPARK_HOME'),'R', 'lib'))
 sparkR.session(master = 'spark://master:7077', appName = 'titanic demo',
                sparkConfig = list(spark.driver.memory = '2g'))
 
-set.seed(1237)
-titanic <- read.csv('titanic.csv', stringsAsFactors = FALSE) %>%
-  dplyr::sample_frac(1, replace = FALSE)
-rec <- nrow(titanic)
-df <- as.DataFrame(titanic)
-tdf <- as.tibble(titanic)
+tdf <- read.csv('titanic.csv', stringsAsFactors = FALSE) %>%
+  dplyr::sample_frac(1, replace = FALSE) %>% as.tibble()
+rec <- nrow(tdf)
+df <- as.DataFrame(tdf)
 
 df %>% head(2)
-# class   age  sex survived
-# 1 third adult male       no
-# 2  crew adult male       no
 
 printSchema(df)
-# root
-# |-- class: string (nullable = true)
-# |-- age: string (nullable = true)
-# |-- sex: string (nullable = true)
-# |-- survived: string (nullable = true)
 
 
 
@@ -34,19 +24,8 @@ printSchema(df)
 
 ## more functions
 str(df)
-# 'SparkDataFrame': 4 variables:
-# $ class   : chr "third" "crew" "first" "first" "second" "crew"
-# $ age     : chr "adult" "adult" "adult" "adult" "adult" "adult"
-# $ sex     : chr "male" "male" "male" "female" "male" "male"
-# $ survived: chr "no" "no" "yes" "yes" "no" "no"
 
 summary(df) %>% collect()
-#   summary class   age    sex survived
-# 1   count  2201  2201   2201     2201
-# 2    mean  <NA>  <NA>   <NA>     <NA>
-# 3  stddev  <NA>  <NA>   <NA>     <NA>
-# 4     min  crew adult female       no
-# 5     max third child   male      yes
 
 df %>% collect() # SparkDataFrame to data.frame
 
@@ -78,7 +57,7 @@ df %>% filter(df$survived == 'yes' & df$age == 'child') %>% head()
 tdf %>% dplyr::filter(survived == 'yes' & age == 'child') %>% head()
 
 # - many function names are same to _dplyr_
-# + use `::` for calling them
+#     + use `::` for calling them
 # - expressions are interchangeable but not always - see _dapply_ section
 # - `expr()` is more expressive - see ML section
 
@@ -90,23 +69,10 @@ tdf %>% dplyr::filter(survived == 'yes' & age == 'child') %>% head()
 df %>% mutate(age_c = ifelse(expr('age') == 'adult', '1', '0')) %>% 
   head(2)
 
-#   class   age  sex survived age_c
-# 1 third adult male       no     1
-# 2  crew adult male       no     1
-
 ## grouping, aggregation
 df %>% group_by('class', 'age') %>%
   summarize(count = n(expr('survived'))) %>%
   arrange('class', 'age') %>% collect()
-
-#    class   age count                                                            
-# 1   crew adult   885
-# 2  first adult   319
-# 3  first child     6
-# 4 second adult   261
-# 5 second child    24
-# 6  third adult   627
-# 7  third child    79
 
 tdf %>% dplyr::group_by(class, age) %>%
   dplyr::summarise(count = n())
@@ -122,15 +88,6 @@ df %>% join(rDF, df$age == rDF$age, 'inner') %>%
   group_by('class', 'lvl') %>%
   summarize(count = n(expr('survived'))) %>%
   arrange('class', 'lvl') %>% collect()
-
-#    class lvl count
-# 1   crew   0   885
-# 2  first   0   319
-# 3  first   1     6
-# 4 second   0   261
-# 5 second   1    24
-# 6  third   0   627
-# 7  third   1    79
 
 tdf %>% dplyr::inner_join(rdf, by = 'age') %>%
   dplyr::group_by(class, lvl) %>%
